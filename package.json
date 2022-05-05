@@ -1,0 +1,28 @@
+{
+  "name": "website-ouranos",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/baramex/website-ouranos.git"
+  },
+  "author": "baramex",
+  "license": "SEE LICENSE IN LICENSE FILE",
+  "bugs": {
+    "url": "https://github.com/baramex/website-ouranos/issues"
+  },
+  "homepage": "https://github.com/baramex/website-ouranos#readme",
+  "dependencies": {
+    "axios": "^0.27.2",
+    "body-parser": "^1.20.0",
+    "cookie-parser": "^1.4.6",
+    "dotenv": "^16.0.0",
+    "express": "^4.17.3",
+    "express-rate-limit": "^6.3.0",
+    "moment-timezone": "^0.5.34"
+  }
+}
