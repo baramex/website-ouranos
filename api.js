@@ -10,11 +10,7 @@ router.use("*", (req, res, next) => {
 });
 
 router.post("/disconnect", (req, res) => {
-    var token = req.headers.authorization;
-    if (!token) return res.status(401).send("TokenNull");
-
-    token = token.replace("token ", "");
-    if (!req.session || req.session.token != token) return res.status(403).send("Unauthorized");
+    if (!req.session) return res.status(403).send("Unauthorized");
 
     removeSession(req.session.id);
 
@@ -22,7 +18,7 @@ router.post("/disconnect", (req, res) => {
 });
 
 router.get("/user", async (req, res) => {
-    if (!req.session || req.session.token != token) return res.status(403).send("Unauthorized");
+    if (!req.session) return res.status(403).send("Unauthorized");
 
     var user = await getUser(req.session.discord_id, req.session.token_type, req.session.access_token).catch(console.error);
     if (!user) return res.status(403).send("Unauthorized");

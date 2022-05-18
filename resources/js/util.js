@@ -10,7 +10,7 @@ window.addEventListener("load", async () => {
     }
 
     var lastUpdate = sessionStorage.getItem("lastUpdate") || 0;
-    if (new Date().getTime() - lastUpdate >= 5 * 60 * 1000 && sessionStorage.getItem("token")) {
+    if (new Date().getTime() - lastUpdate >= 5 * 60 * 1000 && isAuthenticated()) {
         await getUser();
         sessionStorage.setItem("lastUpdate", new Date().getTime());
     }
@@ -32,6 +32,10 @@ function getMessage(error) {
     txt = txt.replace(/ /g, "").replace("message:", "");
 
     return messages[txt] || txt;
+}
+
+function isAuthenticated() {
+    return getCookie("token") && getCookie("sessionID") && getCookie("userID");
 }
 
 function resetSession() {
@@ -66,9 +70,7 @@ function formatDate(date) {
 }
 
 function disconnect() {
-    var token = getCookie("token");
-    if (!token) return;
-    axios.post("/api/disconnect", {}, { headers: { Authorization: "Token " + token } }).then(response => {
+    axios.post("/api/disconnect").then(response => {
         setCookie("popup", JSON.stringify({ type: "success", content: getMessage("message:Logout") }))
         window.location.href = "/";
     }, () => { });
@@ -76,9 +78,7 @@ function disconnect() {
 }
 
 async function getUser() {
-    var token = getCookie("token");
-    if (!token) return;
-    await axios.get("/api/user", { headers: { Authorization: "Token " + token } }).then(response => {
+    await axios.get("/api/user").then(response => {
         sessionStorage.setItem("user", JSON.stringify(response.data.user));
     }, () => {
         resetSession();
