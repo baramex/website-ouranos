@@ -6,10 +6,44 @@ body {
     overflow-x: unset;
     margin: 0;
     background-color: #EAEAE8;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+
+.title-container {
+    display: flex;
+    align-items: center;
+}
+
+.logo {
+    width: 50px;
+}
+
+.title {
+    margin: 0 15px;
+    color: white;
+    text-transform: uppercase;
+    font-size: 25px;
+}
+
+.slogan-container {
+    margin-top: 120px;
+    color: white;
+    text-align: center;
+    line-height: 30px;
+    letter-spacing: 1pt;
+}
+
+.slogan-container h2 {
+    font-size: 40px;
+    margin: 50px 0;
+}
+
+.join-us-btn {
+    margin-top: 40px;
 }
 
 section#main {
-    background: linear-gradient(to left, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.7)), url("/images/main.jpg");
+    background: linear-gradient(to bottom, rgba(0, 0, 0, .4), rgba(0, 0, 0, 0), rgba(0, 0, 0, 0)), url("/images/background.jpg");
     background-attachment: fixed;
     background-repeat: no-repeat;
     background-size: cover;
@@ -25,28 +59,28 @@ header#main-header {
     position: fixed;
     top: 0;
     width: calc(100% - 40px);
-    letter-spacing: 2px;
+    letter-spacing: 1px;
     padding: 0 20px;
-    transition-duration: .6s;
-    line-height: 60px;
-    min-height: 60px;
+    transition: background-color .5s;
+    line-height: 80px;
+    min-height: 80px;
     z-index: 2;
+    backdrop-filter: blur(2px);
 }
 
 header#main-header.banner {
-    background-color: rgba(20, 20, 20, .98);
+    backdrop-filter: blur(10px);
+    background-color: rgba(20, 20, 20, .8);
     box-shadow: 0 0 50px 0 rgba(20, 20, 20, .8);
 }
 
-header#main-header a {
-    margin: 0 10px;
-}
-
 section#info {
-    margin-top: 50px;
+    background-color: #212020;
+    padding: 50px 0;
 }
 
 section#info div.grid {
+    margin: 50px 0 0;
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-gap: 15%;
@@ -61,12 +95,12 @@ section#info div.grid img {
 
 section#info div.grid div.box {
     padding: 20px;
-    background-color: #f3f3ed;
+    background-color: #e1dfdf;
     border-radius: 10px;
     transition: cubic-bezier(0.68, -0.55, 0.265, 1.55) .4s;
     cursor: pointer;
     box-shadow: 0px 30px 40px -20px rgba(30, 30, 30, .4);
-    border-top: 4px solid #cc7ae3d2;
+    border-top: 4px solid #931611;
 }
 
 section#info div.grid div.box:nth-child(1):hover {
@@ -88,19 +122,30 @@ section#info div.grid h2 {
 section#info div.grid p {
     font-family: sans-serif;
     font-size: 20px;
-    color: #8d8d8d;
+    color: #767676;
     text-align: left;
     margin: 0;
+}
+
+section#about p {
+    margin: 70px auto;
+    width: 80%;
+    max-width: 1200px;
+    min-width: 300px;
+    text-align: center;
 }
 
 section h1,
 .popup h1 {
     text-align: center;
-    font-size: 70px;
-    font-family: "abrilfatface";
+    font-size: 55px;
     color: #272727;
     font-weight: normal;
-    margin-bottom: 30px;
+    margin: 0;
+}
+
+.white {
+   color: #dadada; 
 }
 
 .form input,
@@ -112,7 +157,6 @@ section h1,
     border: 2px solid #EAEAE8;
     border-radius: 7px;
     font-size: 16px;
-    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
     color: #EAEAE8;
     padding: 10px 20px;
     height: 50px;
@@ -135,7 +179,6 @@ section h1,
     background-color: #EAEAE8;
     border: none;
     color: #141414;
-    font-family: Arial, Helvetica, sans-serif;
     font-size: 20px;
     font-weight: bold;
     transition: ease-in-out 0.5s;
@@ -148,7 +191,6 @@ div.form label {
     transform: translateY(-50%);
     cursor: text;
     transition: 200ms ease-in;
-    font-family: Arial, Helvetica, sans-serif;
     font-size: 18px;
     padding: 5px 10px;
     background-color: #141414;
@@ -211,32 +253,34 @@ a.button {
     filter: drop-shadow(2px 4px 5px rgba(20, 20, 20, .7));
     display: inline-flex;
     position: relative;
-    font-family: "abrilfatface";
     color: white;
-    font-size: 25px;
+    font-size: 18px;
     outline: none;
     text-decoration: none;
     overflow: hidden;
     cursor: pointer;
-    height: 48px;
 }
 
 a.button::after {
     content: '';
     position: absolute;
-    bottom: 0;
+    bottom: 26px;
     left: 0;
     width: 100%;
-    height: 0.1em;
+    height: 1px;
     background-color: white;
     opacity: 1;
     transition: opacity 300ms, transform 300ms;
-    transform: translate3d(-100%, 0, 0);
+    transform: translate(0, 0);
 }
 
 a.button:hover::after,
 a.button:focus::after {
-    transform: translate3d(0, 0, 0);
+    transform: translate(-100%, 0);
+}
+
+.about-btn {
+    margin-left: auto;
 }
 
 a.separator {
@@ -250,7 +294,34 @@ button {
     outline: none;
     cursor: pointer;
     border: none;
-    padding: 15px;
+    background-color: #272727;
+    padding: 15px 20px;
+    color: white;
+    border-radius: 4px;
+    letter-spacing: 1px;
+    backdrop-filter: blur(4px);
+    font-size: 16px;
+    transition: .5s;
+}
+
+.join-us-btn {
+    background-color: #6A1C1A;
+}
+
+.join-us-btn:hover {
+    background-color: #541313;
+}
+
+.login-btn {
+    float: right;
+    margin-left: 40px;
+    background-color: #575252b7;
+    box-shadow: 50px 100px 100px -100px #463d3db7 inset;
+}
+
+.login-btn:hover {
+    background-color: #7b6c6cb7;
+    box-shadow: 150px 150px 100px -100px #6c2323b7 inset;
 }
 
 footer {

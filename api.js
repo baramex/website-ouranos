@@ -1,6 +1,7 @@
 const momenttz = require("moment-timezone");
 
 const express = require("express");
+const { getUser, removeSession } = require("./user");
 const router = express.Router();
 
 router.use("*", (req, res, next) => {
@@ -13,22 +14,18 @@ router.post("/disconnect", (req, res) => {
     if (!token) return res.status(401).send("TokenNull");
 
     token = token.replace("token ", "");
-    if (!req.session || req.session.token != token) return res.status(403).send("InvalideToken");
+    if (!req.session || req.session.token != token) return res.status(403).send("Unauthorized");
 
-    sessions.splice(sessions.findIndex(a => a.id == req.session.id), 1);
+    removeSession(req.session.id);
 
     return res.sendStatus(201);
 });
 
-router.get("/user", (req, res) => {
-    var token = req.headers.authorization;
-    if (!token) return res.status(401).send("TokenNull");
+router.get("/user", async (req, res) => {
+    if (!req.session || req.session.token != token) return res.status(403).send("Unauthorized");
 
-    token = token.replace("token ", "");
-    if (!req.session || req.session.token != token) return res.status(403).send("InvalideToken");
-
-    var user = getUser(req.session.token_type, req.session.access_token, req.session.discordID);
-    if (!user) return res.status(403).send("InvalideToken");
+    var user = await getUser(req.session.discord_id, req.session.token_type, req.session.access_token).catch(console.error);
+    if (!user) return res.status(403).send("Unauthorized");
 
     return res.status(200).json({ user });
 });
@@ -38,14 +35,4 @@ function formatDate(date) {
     return `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")} ${date.getDate().toString().padStart(2, "0")}/${(date.getMonth() + 1).toString().padStart(2, "0")}/${date.getFullYear().toString().padStart(4, "0")}`;
 }
 
-function generateID(l) {
-    var a = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".split("");
-    var b = "";
-    for (var i = 0; i < l; i++) {
-        var j = (Math.random() * (a.length - 1)).toFixed(0);
-        b += a[j];
-    }
-    return b;
-}
-
-module.exports = router;
+module.exports = { router, formatDate };
