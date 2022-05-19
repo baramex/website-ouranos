@@ -20,7 +20,8 @@ router.post("/disconnect", (req, res) => {
 router.get("/user", async (req, res) => {
     if (!req.session) return res.status(403).send("Unauthorized");
 
-    var user = await getUser(req.session.discord_id, req.session.token_type, req.session.access_token).catch(console.error);
+    // TODO: get by the req
+    var user = await getUser(req.session.discord_id).catch(console.error);
     if (!user) return res.status(403).send("Unauthorized");
 
     return res.status(200).json({ user });

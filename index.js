@@ -18,7 +18,7 @@ const limiter = rateLimit({
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const { default: axios } = require("axios");
-const { getUser, createSession, getSession } = require("./user");
+const { getUser, createSession, getSession, parseDiscordInfo, addUser } = require("./user");
 server.use(express.static("./resources"));
 server.use(bodyParser.json());
 server.use(cookieParser());
@@ -33,6 +33,8 @@ server.use("*", async (req, res, next) => {
     var discordID = req.cookies.userID;
     var token = req.cookies.token;
     if (!sessionID || !discordID || !token) return next();
+
+    // TODO: change by the new function
     var session = getSession(sessionID, discordID);
 
     if (!session || session.token != token) {
@@ -66,17 +68,17 @@ server.get("/discord-auth", async (req, res) => {
             var token_type = result.data.token_type;
             var access_token = result.data.access_token;
 
-            getUser(null, token_type, access_token).then(user => {
-                var s = createSession(token_type, access_token, expires_in, user);
+            parseDiscordInfo(token_type, access_token).then(user => {
+                if (!user.guild) return resolve({ status: 400, message: "NotOnTheServer" });
+
+                var s = createSession(token_type, access_token, expires_in, user.id);
                 res.cookie("sessionID", s.id, { expires: new Date(s.date + s.expires_in * 1000) });
                 res.cookie("userID", s.discord_id, { expires: new Date(s.date + s.expires_in * 1000) });
                 res.cookie("token", s.token);
+
                 resolve({ status: 200, message: "Logged" });
-            }).catch(err => {
-                if (err == "NotOnTheServer") resolve({ status: 400, message: "NotOnTheServer" })
-                else resolve(_res);
-            });
-        }).catch(err => { console.error(err?.response?.data); resolve(); });
+            }).catch(err => { console.error(err); resolve(_res) });
+        }).catch(err => { console.error(err?.response?.data); resolve(_res); });
     });
 
     res.cookie("popup", JSON.stringify({ type: response.status == 200 ? "success" : "error", content: "message:" + response.message }));
