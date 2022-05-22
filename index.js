@@ -18,7 +18,7 @@ const limiter = rateLimit({
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const { default: axios } = require("axios");
-const { getUser, createSession, getSession, parseDiscordInfo, addUser } = require("./user");
+const { createSession, parseDiscordInfo } = require("./user");
 server.use(express.static("./resources"));
 server.use(bodyParser.json());
 server.use(cookieParser());
@@ -27,27 +27,6 @@ server.listen(PORT, () => {
 });
 
 const { CLIENT_ID, CLIENT_SECRET, URL, REDIRECT_URI } = process.env;
-
-server.use("*", async (req, res, next) => {
-    var sessionID = req.cookies.sessionID;
-    var discordID = req.cookies.userID;
-    var token = req.cookies.token;
-    if (!sessionID || !discordID || !token) return next();
-
-    // TODO: change by the new function
-    var session = getSession(sessionID, discordID);
-
-    if (!session || session.token != token) {
-        res.clearCookie("sessionID");
-        res.clearCookie("discordID");
-        res.clearCookie("token");
-
-        return next();
-    }
-
-    req.session = session;
-    next();
-});
 
 server.use("/api", limiter, require("./api").router);
 
@@ -62,25 +41,31 @@ server.get("/discord-auth", async (req, res) => {
         var _res = { status: 400, message: "Unexpected" };
         if (!code) resolve(_res);
 
-        axios.post("https://discord.com/api/oauth2/token", `client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}&grant_type=authorization_code&code=${code}&redirect_uri=${REDIRECT_URI}`, { 'Content-Type': 'application/x-www-form-urlencoded' }).then(result => {
-            if (!result) resolve(_res);
-            var expires_in = result.data.expires_in;
-            var token_type = result.data.token_type;
-            var access_token = result.data.access_token;
+        try {
+            axios.post("https://discord.com/api/oauth2/token", `client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}&grant_type=authorization_code&code=${code}&redirect_uri=${REDIRECT_URI}`, { 'Content-Type': 'application/x-www-form-urlencoded' }).then(result => {
+                if (!result) resolve(_res);
 
-            parseDiscordInfo(token_type, access_token).then(user => {
-                if (!user.guild) return resolve({ status: 400, message: "NotOnTheServer" });
+                var expires_in = result.data.expires_in;
+                var token_type = result.data.token_type;
+                var access_token = result.data.access_token;
 
-                var s = createSession(token_type, access_token, expires_in, user.id);
-                res.cookie("sessionID", s.id, { expires: new Date(s.date + s.expires_in * 1000) });
-                res.cookie("userID", s.discord_id, { expires: new Date(s.date + s.expires_in * 1000) });
-                res.cookie("token", s.token);
+                parseDiscordInfo(token_type, access_token).then(async user => {
+                    if (!user.guild) return resolve({ status: 400, message: "NotInTheServer" });
 
-                resolve({ status: 200, message: "Logged" });
-            }).catch(err => { console.error(err); resolve(_res) });
-        }).catch(err => { console.error(err?.response?.data); resolve(_res); });
+                    var s = await createSession(token_type, access_token, expires_in, user.id);
+                    res.cookie("sessionID", s.id, { expires: new Date(s.date + s.expires_in * 1000) });
+                    res.cookie("userID", s.discord_id, { expires: new Date(s.date + s.expires_in * 1000) });
+                    res.cookie("token", s.token);
+
+                    resolve({ status: 200, message: "Logged" });
+                });
+            });
+        } catch (error) {
+            resolve(_res);
+        }
+
     });
 
     res.cookie("popup", JSON.stringify({ type: response.status == 200 ? "success" : "error", content: "message:" + response.message }));
-    res.redirect(URL);
+    res.status(response.status).redirect(URL);
 });

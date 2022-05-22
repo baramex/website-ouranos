@@ -20,9 +20,10 @@ const messages = {
     TooManyRequests: "Trop de requêtes, veuillez réessayer dans quelques minutes.",
     Logged: "Connexion réussie !",
     Logout: "Déconnexion réussie !",
-    NotOnTheServer: "Vous devez être sur notre serveur discord.",
-    Unexpected: "Erreur inattendue",
-    Unauthorized: "Vous n'êtes pas autorisé à faire ça."
+    NotInTheServer: "Vous devez être dans notre serveur discord.",
+    Unexpected: "Erreur inattendue..",
+    Unauthorized: "Vous n'êtes pas autorisé à faire ça.",
+    InvalidSession: "Session invalide, veuillez vous reconnecter."
 };
 
 function getMessage(error) {
@@ -70,20 +71,22 @@ function formatDate(date) {
 }
 
 function disconnect() {
-    axios.post("/api/disconnect").then(response => {
+    axios.post("/api/disconnect").then(() => {
         setCookie("popup", JSON.stringify({ type: "success", content: getMessage("message:Logout") }))
         window.location.href = "/";
-    }, () => { });
+    }, () => {
+        showErrorMessage(getMessage());
+    });
     resetSession();
 }
 
 async function getUser() {
     await axios.get("/api/user").then(response => {
-        sessionStorage.setItem("user", JSON.stringify(response.data.user));
+        sessionStorage.setItem("user", JSON.stringify(response.data));
     }, () => {
+        showErrorMessage(getMessage("message:InvalidSession"));
         resetSession();
     });
-    return;
 }
 
 function showErrorMessage(error, action = null) {
