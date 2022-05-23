@@ -38,9 +38,15 @@
                 <img src="/images/logo.png" alt="logo" class="logo">
                 <h1 class="title">Ouranos</h1>
                 <a class="button about-btn" href="#about">À propos</a>
-                <button class="login-btn"
-                    onclick="document.location.href='https://discord.com/api/oauth2/authorize?client_id=952191960226070608&redirect_uri=http%3A%2F%2Flocalhost%3A2022%2Fdiscord-auth&response_type=code&scope=identify%20guilds';">Se
-                    connecter</button>
+                <div id="account-container">
+                    <button class="login-btn"
+                        onclick="document.location.href='https://discord.com/api/oauth2/authorize?client_id=952191960226070608&redirect_uri=http%3A%2F%2Flocalhost%3A2022%2Fdiscord-auth&response_type=code&scope=identify%20email%20guilds.members.read';">Se
+                        connecter</button>
+                    <button class="account-btn" onclick="document.location.href='/account'">
+                        <!-- <p class="name"></p> -->
+                        <img class="avatar">
+                    </button>
+                </div>
             </div>
         </header>
 
