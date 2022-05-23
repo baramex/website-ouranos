@@ -9,10 +9,21 @@ window.addEventListener("load", async () => {
         else if (popup.type == "error") showErrorMessage(getMessage(popup.content));
     }
 
+    var user = sessionStorage.getItem("user");
     var lastUpdate = sessionStorage.getItem("lastUpdate") || 0;
-    if (new Date().getTime() - lastUpdate >= 5 * 60 * 1000 && isAuthenticated()) {
+    if ((new Date().getTime() - lastUpdate >= 5 * 60 * 1000 || !user) && isAuthenticated()) {
         await getUser();
+        user = sessionStorage.getItem("user");
         sessionStorage.setItem("lastUpdate", new Date().getTime());
+    }
+    if (user) {
+        user = JSON.parse(user);
+        var container = document.getElementById("account-container");
+        container.querySelector(".login-btn").hidden = true;
+        var acc = container.querySelector(".account-btn");
+        // acc.querySelector("p.name").innerText = user.username;
+        acc.querySelector("img.avatar").src = user.avatar_url;
+        acc.hidden = false;
     }
 });
 
@@ -21,7 +32,7 @@ const messages = {
     Logged: "Connexion réussie !",
     Logout: "Déconnexion réussie !",
     NotInTheServer: "Vous devez être dans notre serveur discord.",
-    Unexpected: "Erreur inattendue..",
+    Unexpected: "Erreur inattendue.",
     Unauthorized: "Vous n'êtes pas autorisé à faire ça.",
     InvalidSession: "Session invalide, veuillez vous reconnecter."
 };
@@ -42,12 +53,12 @@ function isAuthenticated() {
 function resetSession() {
     deleteCookie("token");
     deleteCookie("sessionID");
-    deleteCookie("discordID");
+    deleteCookie("userID");
     sessionStorage.clear();
 }
 
 function deleteCookie(name) {
-    setCookie(name, "", -1);
+    if (getCookie(name)) setCookie(name, "", -1);
 }
 
 function setCookie(cname, cvalue, exdays) {
@@ -81,11 +92,14 @@ function disconnect() {
 }
 
 async function getUser() {
-    await axios.get("/api/user").then(response => {
-        sessionStorage.setItem("user", JSON.stringify(response.data));
-    }, () => {
-        showErrorMessage(getMessage("message:InvalidSession"));
-        resetSession();
+    await axios.get("/api/user/partial", { params: { projection: "username,avatar_url" } }).then(response => {
+        var user = JSON.parse(sessionStorage.getItem("user") || "{}") || {};
+        sessionStorage.setItem("user", JSON.stringify({ ...user, ...response.data }));
+    }, err => {
+        if (err.response.status == 401) {
+            showErrorMessage(getMessage("message:InvalidSession"));
+            resetSession();
+        }
     });
 }
 

@@ -8,9 +8,21 @@ const express = require("express");
 const server = express();
 
 const rateLimit = require('express-rate-limit')
-const limiter = rateLimit({
+const apiLimiter = rateLimit({
     windowMs: 5 * 60 * 1000,
-    max: 20,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+const loginLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 2,
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+const loginLimiterHour = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    max: 5,
     standardHeaders: true,
     legacyHeaders: false,
 });
@@ -18,54 +30,58 @@ const limiter = rateLimit({
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const { default: axios } = require("axios");
-const { createSession, parseDiscordInfo } = require("./user");
+const { createSession, parseDiscordInfo, discordFetch } = require("./user");
 server.use(express.static("./resources"));
 server.use(bodyParser.json());
 server.use(cookieParser());
 server.listen(PORT, () => {
-    console.log("Server started in " + PORT);
+    console.log("Server started in port " + PORT);
 });
 
 const { CLIENT_ID, CLIENT_SECRET, URL, REDIRECT_URI } = process.env;
 
-server.use("/api", limiter, require("./api").router);
+server.use("/api", apiLimiter, require("./api").router);
+server.use("/discord-auth", loginLimiter, loginLimiterHour);
 
 server.get("/", (req, res) => {
     return res.sendFile(path.join(__dirname, "resources", "pages", "index.html"));
 });
 
+server.get("/account", (req, res) => {
+    return res.sendFile(path.join(__dirname, "resources", "pages", "account.html"));
+});
+
 server.get("/discord-auth", async (req, res) => {
     var code = req.query.code;
 
-    var response = await new Promise((resolve, reject) => {
-        var _res = { status: 400, message: "Unexpected" };
-        if (!code) resolve(_res);
+    var _res = { status: 400, message: "Unexpected" };
+    if (!code) return resolve(_res);
 
-        try {
-            axios.post("https://discord.com/api/oauth2/token", `client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}&grant_type=authorization_code&code=${code}&redirect_uri=${REDIRECT_URI}`, { 'Content-Type': 'application/x-www-form-urlencoded' }).then(result => {
-                if (!result) resolve(_res);
+    try {
+        var result = await discordFetch("/oauth2/token", null, null, "post", `client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}&grant_type=authorization_code&code=${code}&redirect_uri=${REDIRECT_URI}`, { 'Content-Type': 'application/x-www-form-urlencoded' });
+        if (!result) return resolve(_res);
 
-                var expires_in = result.data.expires_in;
-                var token_type = result.data.token_type;
-                var access_token = result.data.access_token;
+        var expires_in = result.expires_in;
+        var token_type = result.token_type;
+        var access_token = result.access_token;
 
-                parseDiscordInfo(token_type, access_token).then(async user => {
-                    if (!user.guild) return resolve({ status: 400, message: "NotInTheServer" });
+        var user = await parseDiscordInfo(token_type, access_token, true);
+        if (!user.guild) return resolve({ status: 400, message: "NotInTheServer" });
 
-                    var s = await createSession(token_type, access_token, expires_in, user.id);
-                    res.cookie("sessionID", s.id, { expires: new Date(s.date + s.expires_in * 1000) });
-                    res.cookie("userID", s.discord_id, { expires: new Date(s.date + s.expires_in * 1000) });
-                    res.cookie("token", s.token);
+        var s = await createSession(token_type, access_token, expires_in, user.id);
 
-                    resolve({ status: 200, message: "Logged" });
-                });
-            });
-        } catch (error) {
-            resolve(_res);
-        }
+        res.cookie("sessionID", s._id, { expires: new Date(s.date + s.expires_in * 1000) });
+        res.cookie("userID", s.discord_id, { expires: new Date(s.date + s.expires_in * 1000) });
+        res.cookie("token", s.token);
 
-    });
+        return resolve({ status: 200, message: "Logged" });
+    } catch (error) {
+        console.error(error?.response || error);
+        return resolve(_res);
+    }
 
-    res.cookie("popup", JSON.stringify({ type: response.status == 200 ? "success" : "error", content: "message:" + response.message }));
-    res.status(response.status).redirect(URL);
+    function resolve(response) {
+        res.cookie("popup", JSON.stringify({ type: response.status == 200 ? "success" : "error", content: "message:" + response.message }));
+        res.status(response.status).redirect(URL);
+    }
 });

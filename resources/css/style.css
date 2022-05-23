@@ -145,7 +145,7 @@ section h1,
 }
 
 .white {
-   color: #dadada; 
+    color: #dadada;
 }
 
 .form input,
@@ -310,6 +310,29 @@ button {
 
 .join-us-btn:hover {
     background-color: #541313;
+}
+
+.account-btn {
+    /*border-radius: 20px;
+    padding: 5px 10px 5px 15px;
+    margin-left: 40px;
+    background-color: #3e3e3ed9;*/
+    background: none;
+    padding: 0;
+    margin-left: 30px;
+}
+
+.account-btn .name {
+    /*display: inline;*/
+}
+
+.account-btn .avatar {
+    vertical-align: middle;
+    border-radius: 50%;
+    background-color: #b9b1b1ad;
+    width: 50px;
+    margin-left: 10px;
+    padding: 3px;
 }
 
 .login-btn {

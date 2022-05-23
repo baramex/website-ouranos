@@ -4,7 +4,7 @@ const express = require("express");
 const { getUser, removeSession, checkExpired, parseDiscordInfo, getSession } = require("./user");
 const router = express.Router();
 
-var authenticated = ["/api/disconnect", "/api/user"];
+var authenticated = ["/api/disconnect", "/api/user/partial", "/api/user/complete"];
 
 router.use("*", (req, res, next) => {
     if (!(req.headers.origin || req.headers.referer || "").replace("www.", "").startsWith(process.env.URL) || req.headers["sec-fetch-site"] != "same-origin") return res.sendStatus(403);
@@ -12,7 +12,7 @@ router.use("*", (req, res, next) => {
 });
 
 router.use("*", async (req, res, next) => {
-    if (!authenticated.includes(req.path)) return next();
+    if (!authenticated.includes(req.baseUrl)) return next();
 
     try {
         var sessionID = req.cookies.sessionID;
@@ -20,30 +20,19 @@ router.use("*", async (req, res, next) => {
         var token = req.cookies.token;
         if (!sessionID || !discordID || !token) return wrongSession();
 
-        var session = getSession(sessionID, discordID);
+        var session = await getSession(sessionID, discordID);
         if (!session || session.token != token) return wrongSession();
 
-        var user = getUser(session.discord_id);
+        var user = await getUser(session.discord_id);
         if (!user) return wrongSession();
-
-        var up_ = true;
-        if (checkExpired(user.lastDiscordUpdate, 1000 * 60 * 30) || (!user.guild && checkExpired(user.lastDiscordUpdate, 1000 * 5))) {
-            await parseDiscordInfo(session.token_type, session.access_token).then(user => {
-                if (!user.guild) {
-                    up_ = false;
-                    return res.status(400).send("NotInTheServer");
-                }
-            });
-        }
-        if (!up_) return;
 
         req.session = session;
         req.user = user;
         next();
     } catch (error) {
-        res.sendStatus(401);
+        console.error(error);
+        res.sendStatus(400);
     }
-
 
     function wrongSession() {
         res.clearCookie("sessionID");
@@ -54,22 +43,47 @@ router.use("*", async (req, res, next) => {
     }
 });
 
-router.post("/disconnect", (req, res) => {
+router.post("/disconnect", async (req, res) => {
     if (!req.session || !req.user) return res.status(403).send("Unauthorized");
 
     try {
-        removeSession(req.session.id);
+        await removeSession(req.session);
     } catch (error) {
+        console.error(error);
         return res.sendStatus(400);
     }
 
     return res.sendStatus(201);
 });
 
-router.get("/user", async (req, res) => {
+router.get(/\/user\/(partial|complete)/, async (req, res) => {
     if (!req.session || !req.user) return res.status(403).send("Unauthorized");
 
-    return res.status(200).json(req.user);
+    var exclude = ["_id", "guild", "lastDiscordUpdate"];
+    if (req.path.includes("partial")) exclude.push("guild_member");
+
+    var projection = req.query.projection?.replace(/ /g, ",")?.split(",")?.splice(0, 10);
+
+    var partial = null;
+    if (projection.includes("guild_member") && !exclude.includes("guild_member") && (!checkExpired(req.user.lastDiscordUpdate, 1000 * 60 * 30) || (!user.guild_member && !checkExpired(req.user.lastDiscordUpdate, 1000 * 5)))) {
+        partial = false;
+    }
+    else if (!checkExpired(req.user.lastDiscordUpdate, 1000 * 60 * 30) || (!req.user.guild && !checkExpired(req.user.lastDiscordUpdate, 1000 * 5))) {
+        partial = true;
+    }
+    if (partial != null) {
+        req.user = await parseDiscordInfo(req.session.token_type, req.session.access_token, partial);
+        if (!req.user.guild) {
+            return res.status(400).send("NotInTheServer");
+        }
+    }
+
+    var obj = {};
+    Object.entries(req.user).forEach(val => {
+        if ((projection ? projection.includes(val[0]) : true) && !exclude.includes(val[0])) obj[val[0]] = val[1];
+    });
+
+    return res.status(200).json(obj);
 });
 
 function formatDate(date) {
