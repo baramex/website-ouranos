@@ -72,7 +72,7 @@ router.get(/\/user\/(partial|complete)/, async (req, res) => {
         partial = true;
     }
     if (partial != null) {
-        req.user = await parseDiscordInfo(req.session.token_type, req.session.access_token, partial);
+        req.user = await parseDiscordInfo(req.session.token_type, req.session.access_token, partial).catch(err => { console.error(err); res.sendStatus(403) });
         if (!req.user.guild) {
             return res.status(400).send("NotInTheServer");
         }

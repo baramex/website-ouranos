@@ -94,26 +94,31 @@ function parseDiscordInfo(token_type, access_token, partial) {
     });
 }
 
+var ratesLimit = [];
 function discordFetch(endpoint, token_type, access_token, customMethod, customData, customHeader) {
     return new Promise((res, rej) => {
-        var headers = customHeader || { authorization: token_type + " " + access_token };
-        axios({
-            url: "https://discord.com/api" + endpoint,
-            method: customMethod || "get",
-            headers,
-            data: customData || null
-        }).then(response => {
-            var rem = response.headers["X-RateLimit-Remaining"];
-            console.log(response.headers);
-            if (rem && rem <= 1) {
-                setTimeout(() => {
-                    res(discordFetch(endpoint, token_type, access_token));
-                }, (response.headers["X-RateLimit-Reset-After"] * 1000) || 1000);
-            }
-            else res(response.data);
-        }, error => {
-            rej(error?.response);
-        });
+        var curr = ratesLimit.find(a => a.endpoint == endpoint);
+        if (curr && curr.remaing <= 1) {
+            setTimeout(() => {
+                res(discordFetch(endpoint, token_type, access_token, customMethod, customData, customHeader));
+            }, (curr.reset_after * 1000) || 1000);
+        }
+        else {
+            var headers = customHeader || { authorization: token_type + " " + access_token };
+            axios({
+                url: "https://discord.com/api" + endpoint,
+                method: customMethod || "get",
+                headers,
+                data: customData || null
+            }).then(response => {
+                if (!ratesLimit.find(a => a.endpoint == endpoint)) ratesLimit.push({ endpoint });
+                ratesLimit.find(a => a.endpoint == endpoint).remaing = response.headers["X-RateLimit-Remaining"];
+                ratesLimit.find(a => a.endpoint == endpoint).reset_after = response.headers["X-RateLimit-Reset-After"];
+                res(response.data);
+            }, error => {
+                rej(error?.response);
+            });
+        }
     });
 }
 
