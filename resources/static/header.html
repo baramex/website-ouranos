@@ -1,0 +1,49 @@
+<div id="hidden-tab" class="hidden-tab"></div>
+
+<div role="alert" class="popup popup-status" id="popup-success">
+    <img src="/images/valid.png">
+    <p class="text"></p>
+    <button class="btn btn-success" id="valid-success" style="padding: 10px 20px;">Ok</button>
+</div>
+
+<div role="alert" class="popup popup-status" id="popup-error">
+    <img src="/images/error.png">
+    <p class="text"></p>
+    <button class="btn btn-danger" id="valid-error" style="padding: 10px 20px;">Ok</button>
+</div>
+
+<header id="main-header" class="position-fixed top-0">
+    <div class="d-flex align-items-center">
+        <img src="/images/logo.png" width="55" alt="logo" class="rounded-circle">
+        <h1 class="title"><a href="/" class="text-decoration-none text-white text-uppercase ms-3 fs-2">Ouranos</a></h1>
+        <a class="btn-underlined ms-auto" href="/#about">À propos</a>
+        <a id="btn-login" class="btn btn-secondary text-decoration-none text-white ms-4"
+            href='https://discord.com/api/oauth2/authorize?client_id=952191960226070608&redirect_uri=http%3A%2F%2Flocalhost%3A2022%2Fdiscord-auth&response_type=code&scope=identify%20email%20guilds'>Se
+            connecter</a>
+        <a id="btn-account" class="account-btn rounded-pill ms-4 text-decoration-none align-items-center"
+            href='/account#account' hidden>
+            <p class="fs-5 name text-white m-0"></p>
+            <img class="align-middle rounded-circle ms-2 p-1 box-shadow-inset bg-gray avatar" width="50" alt="avatar">
+        </a>
+    </div>
+</header>
+<section id="main">
+    <div class="slogan-container text-white position-fixed start-50 translate-middle-x text-center lh-lg">
+        <h2 class="my-5 fs-1">Informatique</h2>
+        <p class="mb-5">
+            Envie de progresser dans l’un de ces domaines ?<br />
+            Un problème, une question, n’attendez pas<br />
+            et rejoignez notre serveur discord
+        </p>
+        <a class="btn text-white btn-red px-4 py-2" href='https://discord.gg/YZaMVJp7dh' target="_blank">Nous
+            rejoindre</a>
+    </div>
+
+    <p id="navigate" hidden>&lt; </p>
+
+    <svg style="position: absolute;bottom: -1px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
+        <path fill="#212020" fill-opacity="1"
+            d="M0,160L288,224L576,192L864,64L1152,224L1440,128L1440,320L1152,320L864,320L576,320L288,320L0,320Z">
+        </path>
+    </svg>
+</section>

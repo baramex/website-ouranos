@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="Baramex">
+    <link rel="icon" href="/images/logo.png">
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; connect-src 'self'; script-src 'self' 'unsafe-inline' cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' cdn.jsdelivr.net; img-src *">
+    <title>Ouranos - informatique | mon compte</title>
+</head>
+
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.26.1/axios.min.js"
+        integrity="sha512-bPh3uwgU5qEMipS/VOmRqynnMXGGSRv+72H/N260MQeXZIK4PG48401Bsby9Nq5P5fz7hy5UGNmC/W1Z51h2GQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
+    <link rel="stylesheet" href="/css/style.css">
+
+    <div id="preloader">
+        <h1 class="text-white position-absolute top-50 start-50 translate-middle">Ouranos</h1>
+    </div>
+
+    <header id="header"></header>
+    <script src="/js/util.js"></script>
+    <script src="/js/account.js"></script>
+
+    <section id="account" class="text-center text-dark">
+        <h1 class="text-light text-center fs-0">Salut, <span class="name"></span></h1>
+        <div class="row">
+            <div class="col-3 p-5 bg-light m-5 rounded-3">
+                <h2 class="mb-5">Profil utilisateur</h2>
+                <img class="avatar large box-shadow-inset rounded-circle" alt="avatar">
+                <p class="tag fs-3 mb-0 mt-3"></p>
+                <p class="email"></p>
+                <div class="overflow-hidden bg-light-gray w-100 rounded-4 d-block position-relative"
+                    style="line-height: 40px;">
+                    <div class="bg-dark-gray level-val fs-5 rounded-s-4 h-100 position-absolute"
+                        aria-progressbar-name="level" role="progressbar">
+                    </div>
+                    <p class="level-txt m-0 mixblend text-white"></p>
+                </div>
+            </div>
+            <div class="col p-5 bg-light m-5 position-relative rounded-3">
+                <h2 class="mb-5">Informations complémentaires</h2>
+                <div class="row box mb-5">
+                    <div class="col-5 p-0 w-50">
+                        <p class="fs-3 mb-2">Nom d'utilisateur</p>
+                        <p class="text-smooth-dark mt-2 mb-3 fs-5 tag"></p>
+                    </div>
+                    <div class="col-5 p-0 w-50">
+                        <p class="fs-3 mb-2">Adresse e-mail</p>
+                        <p class="text-smooth-dark mt-2 mb-3 fs-5 email"></p>
+                    </div>
+                    <div class="col-5 p-0 w-50">
+                        <p class="fs-3 mb-2">Grades</p>
+                        <p class="text-smooth-dark mt-2 mb-3 fs-5 grades"></p>
+                    </div>
+                    <div class="col-5 p-0 w-50">
+                        <p class="fs-3 mb-2">Membre depuis</p>
+                        <p class="text-smooth-dark mt-2 mb-3 fs-5 from"></p>
+                    </div>
+                    <div class="col-5 p-0 w-50">
+                        <p class="fs-3 mb-2">Avertissements</p>
+                        <p class="text-smooth-dark mt-2 mb-3 fs-5 warns"></p>
+                    </div>
+                    <div class="col-5 p-0 w-50">
+                        <p class="fs-3 mb-2">Mutes</p>
+                        <p class="text-smooth-dark mt-2 mb-3 fs-5 mutes"></p>
+                    </div>
+                    <div class="col-5 p-0 w-50">
+                        <p class="fs-3 mb-2">Expulsions</p>
+                        <p class="text-smooth-dark mt-2 mb-3 fs-5 kicks"></p>
+                    </div>
+                    <div class="col-5 p-0 w-50">
+                        <p class="fs-3 mb-2">Bannissements</p>
+                        <p class="text-smooth-dark mt-2 mb-3 fs-5 bans"></p>
+                    </div>
+                </div>
+
+                <button class="btn btn-danger btn-lg px-5 position-absolute bottom-0 mb-5 translate-middle-x"
+                    onclick="this.disabled = true;disconnect().finally(() => this.disabled = false);">Se
+                    déconnecter</button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col p-5 bg-light m-5 rounded-3">
+                <h2 class="mb-5">Mes avis</h2>
+                <div class="advices">
+
+                </div>
+            </div>
+            <div class="col-4 p-5 bg-light m-5 rounded-3">
+                <h2 class="mb-5">Recrutement</h2>
+            </div>
+        </div>
+    </section>
+</body>
+
+</html>

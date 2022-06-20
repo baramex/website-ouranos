@@ -27,15 +27,15 @@ function removeSession(session) {
     });
 }
 
-function getSession(sessionID, discordID) {
-    return db.collection("sessions").findOne({ _id: new ObjectId(sessionID), discord_id: discordID });
+function getSession(sessionID, discordID, ip) {
+    return db.collection("sessions").findOne({ _id: new ObjectId(sessionID), discord_id: discordID, ip });
 }
 
-function createSession(token_type, access_token, expires_in, discord_id) {
+function createSession(token_type, access_token, expires_in, discord_id, ip) {
     return new Promise(async (res, rej) => {
         try {
             await db.collection("sessions").deleteOne({ discord_id });
-            var obj = { token: generateID(30), token_type, access_token, discord_id, expires_in, date: new Date().getTime() };
+            var obj = { token: generateID(30), token_type, access_token, discord_id, expires_in, date: new Date().getTime(), ip };
             obj._id = (await db.collection("sessions").insertOne(obj)).insertedId.toString();
         } catch (error) {
             console.error(error);
@@ -43,6 +43,20 @@ function createSession(token_type, access_token, expires_in, discord_id) {
         }
         res(obj);
     });
+}
+
+async function getInfractionsCount(user) {
+    var id = user.id;
+    var b, w, k, m;
+    try {
+        b = (await db.collection("bans").find({ memberId: id }).toArray()).length;
+        k = (await db.collection("kicks").find({ memberId: id }).toArray()).length;
+        m = (await db.collection("mutes").find({ memberId: id }).toArray()).length;
+        w = (await db.collection("warns").find({ memberId: id }).toArray()).length;
+    } catch (error) {
+        return false;
+    }
+    return { bans: b, kicks: k, mutes: m, warns: w };
 }
 
 function insertOrUpdateUser(id, data) {
@@ -81,11 +95,11 @@ function parseDiscordInfo(token_type, access_token, partial) {
             var user = await discordFetch("/users/@me", token_type, access_token);
             if (!user) return rej("InvalidToken");
             var guilds = await discordFetch("/users/@me/guilds", token_type, access_token);
-            var member = null;
+            var member = {};
             if (guilds && guilds.find(a => a.id == GUILD_ID) && !partial) {
-                member = await axios.get("http://localhost:2023/member/" + user.id);
+                member = (await axios.get("http://localhost:2023/api/member/" + user.id))?.data || {};
             }
-            var obj = await insertOrUpdateUser(user.id, { id: user.id, guild: guilds.find(a => a.id == GUILD_ID), guild_member: member ? { nickname: member.nick, joined_at: member.joined_at, grades: member.grades } : undefined, username: user.username, discriminator: user.discriminator, email: user.email, avatar_url: `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`, lastDiscordUpdate: new Date().getTime() });
+            var obj = await insertOrUpdateUser(user.id, { id: user.id, guild: guilds.find(a => a.id == GUILD_ID), ...member, username: user.username, discriminator: user.discriminator, email: user.email, avatar_url: `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.webp`, challenges: [], lastDiscordUpdate: new Date().getTime() });
             res(obj);
         } catch (error) {
             console.error(error?.response || error);
@@ -94,14 +108,20 @@ function parseDiscordInfo(token_type, access_token, partial) {
     });
 }
 
+async function getStaffAdvicesGiven(user) {
+    var id = user.id;
+    var advices = (await db.collection("staff-advices").find({}, { projection: { advices: 1, id: 1, _id: 0 } }).toArray()).map(a => { return { ...a.advices.find(b => b.id == id), id: a.id } });
+    return advices;
+}
+
 var ratesLimit = [];
 function discordFetch(endpoint, token_type, access_token, customMethod, customData, customHeader) {
     return new Promise((res, rej) => {
         var curr = ratesLimit.find(a => a.endpoint == endpoint);
-        if (curr && curr.remaing <= 1) {
+        if (curr && curr.remaing <= 1 && curr.reset >= new Date().getTime()) {
             setTimeout(() => {
                 res(discordFetch(endpoint, token_type, access_token, customMethod, customData, customHeader));
-            }, (curr.reset_after * 1000) || 1000);
+            }, curr.reset - new Date().getTime());
         }
         else {
             var headers = customHeader || { authorization: token_type + " " + access_token };
@@ -112,8 +132,11 @@ function discordFetch(endpoint, token_type, access_token, customMethod, customDa
                 data: customData || null
             }).then(response => {
                 if (!ratesLimit.find(a => a.endpoint == endpoint)) ratesLimit.push({ endpoint });
-                ratesLimit.find(a => a.endpoint == endpoint).remaing = response.headers["X-RateLimit-Remaining"];
-                ratesLimit.find(a => a.endpoint == endpoint).reset_after = response.headers["X-RateLimit-Reset-After"];
+                var rl = ratesLimit.find(a => a.endpoint == endpoint);
+                rl.remaing = response.headers["x-ratelimit-remaining"];
+                rl.reset = response.headers["x-ratelimit-reset"];
+                rl.time = new Date().getTime();
+
                 res(response.data);
             }, error => {
                 rej(error?.response);
@@ -132,4 +155,4 @@ function generateID(l) {
     return b;
 }
 
-module.exports = { getUser, createSession, insertOrUpdateUser, generateID, getSession, removeSession, parseDiscordInfo, checkExpired, discordFetch };
+module.exports = { getUser, createSession, insertOrUpdateUser, generateID, getSession, removeSession, parseDiscordInfo, checkExpired, discordFetch, getInfractionsCount, getStaffAdvicesGiven };

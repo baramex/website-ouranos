@@ -24,7 +24,8 @@
     "express": "^4.17.3",
     "express-rate-limit": "^6.3.0",
     "moment-timezone": "^0.5.34",
-    "mongodb": "^4.6.0",
-    "node-schedule": "^2.1.0"
+    "mongoose": "^6.4.0",
+    "node-schedule": "^2.1.0",
+    "validator": "^13.7.0"
   }
 }
