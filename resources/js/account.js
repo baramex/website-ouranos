@@ -4,7 +4,7 @@
     if (user && !isAuthenticated()) resetSession();
 
     if ((new Date().getTime() - lastUpdate >= 2 * 60 * 1000 || !user || JSON.parse(user).partial) && isAuthenticated()) {
-        getUser("complete", "username,discriminator,avatar_url,email,grades,date,lvl,exp", true).finally(() => {
+        getUser("complete", "username,discriminator,avatarURL,email,grades,date,lvl,exp", true).finally(() => {
             getUserInfractionsCount().finally(() => {
                 getUserStaffAdvices().finally(() => {
                     userFetched("complete");

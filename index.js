@@ -1,9 +1,16 @@
+// constants
 const PORT = 2022;
 
 require("dotenv").config();
+const mongoose = require('mongoose');
+
+mongoose.connect(process.env.DB, { dbName: process.env.DB_NAME }).then(() => {
+    console.log("Connected to mongodb !");
+}, console.error);
 
 const path = require("path");
 
+// express
 const express = require("express");
 const server = express();
 
@@ -15,21 +22,24 @@ const baseLimiter = rateLimit({
     legacyHeaders: false
 });
 
-const { createSession, parseDiscordInfo, discordFetch } = require("./user");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
+const { discordFetch } = require("./utils/fetch");
+const { User } = require("./models/user.model");
+const { Session } = require("./models/session.model");
 
+// middleware
 server.use(baseLimiter);
 server.use(express.static("./resources"));
 server.use(bodyParser.json());
 server.use(cookieParser());
 server.use((req, res, next) => {
-    req.ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    req.publicIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
     next();
 });
 
 server.use("/api", rateLimit({
-    windowMs: 60 * 1000,
+    windowMs: 10 * 1000,
     max: 10,
     standardHeaders: true,
     legacyHeaders: false,
@@ -41,6 +51,7 @@ server.listen(PORT, () => {
 
 const { CLIENT_ID, CLIENT_SECRET, URL, REDIRECT_URI } = process.env;
 
+// routes
 server.get("/", (req, res) => {
     return res.sendFile(path.join(__dirname, "pages", "index.html"));
 });
@@ -49,35 +60,46 @@ server.get("/account", (req, res) => {
     return res.sendFile(path.join(__dirname, "pages", "account.html"));
 });
 
-server.get(rateLimit({
+server.get("/discord-auth", rateLimit({
     windowMs: 1000 * 60 * 10,
     max: 4,
     standardHeaders: true,
     legacyHeaders: false
-}), "/discord-auth", async (req, res) => {
+}), async (req, res) => {
     try {
         var code = req.query.code;
         if (!code) throw new Error("InvalidRequest");
 
         try {
-            var result = await discordFetch("/oauth2/token", null, null, "post", `client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}&grant_type=authorization_code&code=${code}&redirect_uri=${REDIRECT_URI}`, { 'Content-Type': 'application/x-www-form-urlencoded' });
+            var result = await discordFetch("/oauth2/token", "post", null, null, `client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}&grant_type=authorization_code&code=${code}&redirect_uri=${REDIRECT_URI}`, { 'Content-Type': 'application/x-www-form-urlencoded' });
             if (!result) throw new Error("UnexpectedError");
 
-            var expires_in = result.expires_in;
-            var token_type = result.token_type;
-            var access_token = result.access_token;
+            var expiresIn = result.expires_in;
+            var tokenType = result.token_type;
+            var accessToken = result.access_token;
 
-            var user = await parseDiscordInfo(token_type, access_token, true);
-            if (!user.guild) throw new Error("NotInTheGuild");
+            var fetchUser = await User.fetchUser(tokenType, accessToken);
+            var fetchGuilds = await User.fetchGuilds(tokenType, accessToken);
 
-            var s = await createSession(token_type, access_token, expires_in, user.id, req.ipInfo.ip);
+            var user = await User.insertOrUpdate(fetchUser.id, fetchUser.username, fetchUser.discriminator, `https://cdn.discordapp.com/avatars/${fetchUser.id}/${fetchUser.avatar}.webp`, fetchGuilds, new Date());
 
-            var date = new Date(s.date + s.expires_in * 1000);
-            res.cookie("sessionID", s._id, { expires: date });
-            res.cookie("userID", s.discord_id, { expires: date });
-            res.cookie("token", s.token, { expires: date });
+            var session = await Session.getByUserId(user.id);
+            if (!session) session = await Session.create(user.id, { tokenType, accessToken, expiresIn }, req.publicIp);
+            else {
+                session.tokenType = tokenType;
+                session.accessToken = accessToken;
+                session.expiresIn = expiresIn;
+                session.date = new Date();
+                if (!session.ips.includes(req.publicIp)) session.ips.push(req.publicIp);
+                await session.save();
+            }
 
-            return res.status(200).cookie("popup", JSON.stringify({ type: "success", content: "message:Logged" })).redirect(URL + "/account#account");
+            var date = new Date(session.date.getTime() + expiresIn * 1000);
+            res.cookie("sessionID", session._id.toString(), { expires: date });
+            res.cookie("userID", session.discordId, { expires: date });
+            res.cookie("token", session.token, { expires: date });
+
+            return res.cookie("popup", JSON.stringify({ type: "success", content: "message:Logged" })).redirect(URL + "/account#account");
         } catch (error) {
             console.error(error?.response || error);
             return resolve(_res);

@@ -61,7 +61,7 @@ function userFetched(type) {
         var avatars = document.body.getElementsByClassName("avatar");
         if (avatars.length > 0)
             for (const i in avatars) {
-                avatars.item(i).src = user.avatar_url + (avatars.item(i).classList.contains("large") ? "?size=480" : "");
+                avatars.item(i).src = user.avatarURL + (avatars.item(i).classList.contains("large") ? "?size=480" : "");
             }
 
         if (type == "complete") {
@@ -206,7 +206,7 @@ async function disconnect() {
     }, showCatchMessage);
 }
 
-async function getUser(type = "partial", projection = "username,avatar_url") {
+async function getUser(type = "partial", projection = "username,avatarURL") {
     var res = await axios.get("/api/user/@me/" + type, { params: { projection } }).catch(showCatchMessage);
     if (!res) return;
 

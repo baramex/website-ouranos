@@ -13,4 +13,13 @@ function average(list) {
     return avg;
 }
 
-module.exports = { average };
+/**
+     * 
+     * @param {Date} date 
+     * @param {Number} expiresIn 
+     */
+function checkExpired(date, expiresIn) {
+    return new Date().getTime() - date.getTime() > expiresIn * 1000;
+}
+
+module.exports = { average, checkExpired };
