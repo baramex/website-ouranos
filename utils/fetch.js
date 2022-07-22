@@ -47,7 +47,7 @@ function discordFetch(endpoint, method, token_type, access_token, data = undefin
                 if (!ratesLimit.find(a => a.endpoint == endpoint)) ratesLimit.push({ endpoint });
                 var rl = ratesLimit.find(a => a.endpoint == endpoint);
                 rl.remaing = response.headers["x-ratelimit-remaining"];
-                rl.reset = response.headers["x-ratelimit-reset"];
+                rl.reset = ((response.headers["x-ratelimit-reset"] || 0) + 1) * 1000;
                 rl.time = new Date().getTime();
 
                 res(response.data);
