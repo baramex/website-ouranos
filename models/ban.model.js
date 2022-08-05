@@ -29,8 +29,8 @@ class Ban {
      * @param {String} modo 
      * @returns 
      */
-    static getByUser(guild, member) {
-        return BanModel.find({ guildId: guild, memberId: member });
+    static getByUser(member) {
+        return BanModel.find({ memberId: member });
     }
 }
 

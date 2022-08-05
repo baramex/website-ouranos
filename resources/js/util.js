@@ -1,8 +1,8 @@
 fetch("/static/header.html").then(res => res.text()).then(txt => document.getElementById("header").innerHTML = txt);
 
-var __body;
-var barHeader;
-var headerSize;
+let __body;
+let barHeader;
+let headerSize;
 window.addEventListener("load", async () => {
     __body = true;
 
@@ -15,7 +15,7 @@ window.addEventListener("load", async () => {
     scrollUpdate();
 
     // show popup
-    var popup = getCookie("popup");
+    let popup = getCookie("popup");
     if (popup) {
         deleteCookie("popup");
         popup = JSON.parse(popup);
@@ -24,17 +24,17 @@ window.addEventListener("load", async () => {
     }
 
     // navigate
-    var navigate = document.getElementById("navigate");
-    var path = document.location.pathname;
+    let navigate = document.getElementById("navigate");
+    let path = document.location.pathname;
     if (path != "/") {
-        var a = document.createElement("a");
+        let a = document.createElement("a");
         a.innerText = "accueil";
         a.href = "/";
 
-        var span = document.createElement("span");
+        let span = document.createElement("span");
         span.innerText = document.title.split("|")[1]?.trim() || path.split("/").reverse()[0];
 
-        var separator = document.createElement("span");
+        let separator = document.createElement("span");
         separator.innerText = " / ";
 
         navigate.append(a, separator, span);
@@ -45,94 +45,99 @@ window.addEventListener("load", async () => {
 
 function userFetched(type) {
     if (!__body) return setTimeout(() => userFetched(type), 10);
-    var user = sessionStorage.getItem("user");
+    let user = sessionStorage.getItem("user");
     if (user) {
+        const guild = localStorage.getItem("guild");
+
         user = JSON.parse(user);
         document.getElementById("btn-login").hidden = true;
 
-        var acc = document.getElementById("btn-account");
+        let acc = document.getElementById("btn-account");
         acc.hidden = false;
 
-        var names = document.body.getElementsByClassName("name");
+        let names = document.body.getElementsByClassName("name");
         if (names.length > 0)
             for (const i in names) {
                 names.item(i).innerText = user.username;
             }
-        var avatars = document.body.getElementsByClassName("avatar");
+        let avatars = document.body.getElementsByClassName("avatar");
         if (avatars.length > 0)
             for (const i in avatars) {
                 avatars.item(i).src = user.avatarURL + (avatars.item(i).classList.contains("large") ? "?size=480" : "");
             }
 
         if (type == "complete") {
-            var tags = document.body.getElementsByClassName("tag");
+            let tags = document.body.getElementsByClassName("tag");
             if (tags.length > 0)
                 for (const i in tags) {
                     tags.item(i).innerText = user.username + "#" + user.discriminator;
                 }
-            var emails = document.body.getElementsByClassName("email");
+            let emails = document.body.getElementsByClassName("email");
             if (emails.length > 0)
                 for (const i in emails) {
                     emails.item(i).innerText = user.email;
                 }
-            var lvlt = document.body.getElementsByClassName("level-txt");
+            let lvlt = document.body.getElementsByClassName("level-txt");
             if (lvlt.length > 0)
                 for (const i in lvlt) {
-                    lvlt.item(i).innerText = "Niveau " + (user.lvl || 1);
+                    lvlt.item(i).innerText = "Niveau " + (user.lvl[guild] || 1);
                 }
-            var lvlv = document.body.getElementsByClassName("level-val");
+            let lvlv = document.body.getElementsByClassName("level-val");
             if (lvlv.length > 0)
                 for (const i in lvlv) {
-                    lvlv.item(i).setAttribute("ariaValuenow", user.exp || 0);
-                    lvlv.item(i).setAttribute("ariaValuemax", maxExp(user.lvl || 1));
-                    lvlv.item(i).style.width = (100 * user.exp / maxExp(user.lvl || 1)) + "%";
+                    lvlv.item(i).setAttribute("ariaValuenow", user.exp[guild] || 0);
+                    lvlv.item(i).setAttribute("ariaValuemax", maxExp(user.lvl[guild] || 1));
+                    lvlv.item(i).style.width = (100 * user.exp[guild] / maxExp(user.lvl[guild] || 1)) + "%";
                 }
-            var grades = document.body.getElementsByClassName("grades");
+            let grades = document.body.getElementsByClassName("grades");
             if (grades.length > 0)
                 for (const i in grades) {
-                    grades.item(i).innerText = user.grades?.map(a => a.name.toLowerCase()).join(", ") || "aucun";
+                    grades.item(i).innerText = user.grades[guild].map(a => a.name.toLowerCase()).join(", ") || "aucun";
                 }
-            var from = document.body.getElementsByClassName("from");
+            let from = document.body.getElementsByClassName("from");
             if (from.length > 0)
                 for (const i in from) {
-                    var date = new Date(user.date);
+                    let date = new Date(user.date);
                     from.item(i).innerText = `le ${String(date.getDate()).padStart(2, "0")}/${String(date.getDay()).padStart(2, "0")}/${date.getFullYear()}`;
                 }
-            var warns = document.body.getElementsByClassName("warns");
+            let warns = document.body.getElementsByClassName("warns");
             if (warns.length > 0)
                 for (const i in warns) {
-                    warns.item(i).innerText = user.infractions?.warns + " avertissement";
+                    warns.item(i).innerText = user.infractions[guild].warns + " avertissement";
                 }
-            var bans = document.body.getElementsByClassName("bans");
+            let bans = document.body.getElementsByClassName("bans");
             if (bans.length > 0)
                 for (const i in bans) {
-                    bans.item(i).innerText = user.infractions?.bans + " bannissement";
+                    bans.item(i).innerText = user.infractions[guild].bans + " bannissement";
                 }
-            var mutes = document.body.getElementsByClassName("mutes");
+            let mutes = document.body.getElementsByClassName("mutes");
             if (mutes.length > 0)
                 for (const i in mutes) {
-                    mutes.item(i).innerText = user.infractions?.mutes + " mutes";
+                    mutes.item(i).innerText = user.infractions[guild].mutes + " mutes";
                 }
-            var kicks = document.body.getElementsByClassName("kicks");
+            let kicks = document.body.getElementsByClassName("kicks");
             if (kicks.length > 0)
                 for (const i in kicks) {
-                    kicks.item(i).innerText = user.infractions?.kicks + " expulsions";
+                    kicks.item(i).innerText = user.infractions[guild].kicks + " expulsions";
                 }
-            var advices = document.body.getElementsByClassName("advices");
-            if (advices.length > 0)
-                for (const i in advices) {
-                    user.staff_advices.forEach(advice => {
-                        // TODO
-                        var div = document.createElement("div");
-                        div.innerText = advice.comment;
-                        advices.item(i).append(div);
-                    });
+            let certification = document.body.querySelector(".certification");
+            if (certification) {
+                if (user.challenges?.length == 0) {
+                    let p = document.createElement("p");
+                    p.innerHTML = "Vous n'avez encore passé aucune certification, grâce à elle, vous pourez avoir accès au serveur <i>Ouranos Cerif</i>.";
+                    certification.append(p);
                 }
+                let a = document.createElement("a");
+                a.href = "/certification";
+                a.classList.add("btn", "btn-success", "btn-lg", "mt-4");
+                a.innerText = "Nouvelle certification";
+                certification.append(a);
+            }
         }
     }
 
     // remove loader
-    var preloader = document.getElementById("preloader");
+    let preloader = document.getElementById("preloader");
     preloader.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300 }).onfinish = () => preloader.remove();
 }
 
@@ -152,7 +157,7 @@ const messages = {
 
 function getMessage(error) {
     if (!error) error = "message:unexpected";
-    var txt = error.data || error.statusText || error;
+    let txt = error.data || error.statusText || error;
     if (!txt || !txt.startsWith("message:")) return txt || "Erreur inattendue";
     txt = txt.replace(/ /g, "").replace("message:", "");
 
@@ -182,7 +187,7 @@ function setCookie(cname, cvalue, exdays) {
 }
 
 function getCookie(name) {
-    var cookies = parseCookies(document.cookie);
+    let cookies = parseCookies(document.cookie);
     return cookies[name];
 }
 
@@ -207,40 +212,34 @@ async function disconnect() {
 }
 
 async function getUser(type = "partial", projection = "username,avatarURL") {
-    var res = await axios.get("/api/user/@me/" + type, { params: { projection } }).catch(showCatchMessage);
+    let res = await axios.get("/api/user/@me/" + type, { params: { projection } }).catch(showCatchMessage);
     if (!res) return;
 
-    var user = JSON.parse(sessionStorage.getItem("user") || "{}") || {};
+    let user = JSON.parse(sessionStorage.getItem("user") || "{}") || {};
     user = { ...user, ...res.data };
 
     if (!user.hasOwnProperty("partial") || user.parial === true) user.partial = type == "partial";
+
+    if (user.guilds) {
+        if (!localStorage.getItem("guild")) localStorage.setItem("guild", user.guilds.includes("challenge") ? "challenge" : "basic");
+    }
 
     sessionStorage.setItem("user", JSON.stringify(user));
 }
 
 async function getUserInfractionsCount() {
-    var res = await axios.get("/api/user/@me/infractions/count").catch(showCatchMessage);
+    let res = await axios.get("/api/user/@me/infractions/count").catch(showCatchMessage);
     if (!res) return;
 
-    var user = JSON.parse(sessionStorage.getItem("user") || "{}") || {};
+    let user = JSON.parse(sessionStorage.getItem("user") || "{}") || {};
     user.infractions = res.data;
-
-    sessionStorage.setItem("user", JSON.stringify(user));
-}
-
-async function getUserStaffAdvices() {
-    var res = await axios.get("/api/user/@me/staff-advices/all").catch(showCatchMessage);
-    if (!res) return;
-
-    var user = JSON.parse(sessionStorage.getItem("user") || "{}") || {};
-    user.staff_advices = res.data;
 
     sessionStorage.setItem("user", JSON.stringify(user));
 }
 
 function showErrorMessage(error, action = null) {
     openPopup("popup-error");
-    var popup = document.getElementById("popup-error");
+    let popup = document.getElementById("popup-error");
     popup.querySelector("p.text").innerText = error;
 
     document.getElementById("valid-error").onclick = () => {
@@ -251,7 +250,7 @@ function showErrorMessage(error, action = null) {
 
 function showSuccess(message, action = null) {
     openPopup("popup-success");
-    var popup = document.getElementById("popup-success");
+    let popup = document.getElementById("popup-success");
     popup.querySelector("p.text").innerText = message;
 
     document.getElementById("valid-success").onclick = () => {
@@ -261,27 +260,27 @@ function showSuccess(message, action = null) {
 }
 
 function closePopup(id, hidden = true) {
-    var popup = document.getElementById(id);
+    let popup = document.getElementById(id);
     if (!popup) return;
     popup.style.transform = "translate(-50%, -50%) scale(0)";
 
     setTimeout(() => popup.style.display = "none", 300);
 
     if (hidden) {
-        var hidden = document.getElementById("hidden-tab");
+        let hidden = document.getElementById("hidden-tab");
         hidden.style.opacity = "0";
         setTimeout(() => hidden.style.display = "none", 300);
     }
 }
 
 function openPopup(id) {
-    var popup = document.getElementById(id);
+    let popup = document.getElementById(id);
     if (!popup) return;
 
     popup.style.display = "block";
     setTimeout(() => popup.style.transform = "translate(-50%, -50%) scale(1)", 50);
 
-    var hidden = document.getElementById("hidden-tab");
+    let hidden = document.getElementById("hidden-tab");
     hidden.style.display = "block";
     setTimeout(() => hidden.style.opacity = "1", 50);
 }

@@ -62,7 +62,7 @@ server.get("/account", (req, res) => {
 
 server.get("/discord-auth", rateLimit({
     windowMs: 1000 * 60 * 10,
-    max: 4,
+    max: 8,
     standardHeaders: true,
     legacyHeaders: false
 }), async (req, res) => {
@@ -70,42 +70,37 @@ server.get("/discord-auth", rateLimit({
         var code = req.query.code;
         if (!code) throw new Error("InvalidRequest");
 
-        try {
-            var result = await discordFetch("/oauth2/token", "post", null, null, `client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}&grant_type=authorization_code&code=${code}&redirect_uri=${REDIRECT_URI}`, { 'Content-Type': 'application/x-www-form-urlencoded' });
-            if (!result) throw new Error("UnexpectedError");
+        var result = await discordFetch("/oauth2/token", "post", null, null, `client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}&grant_type=authorization_code&code=${code}&redirect_uri=${REDIRECT_URI}`, { 'Content-Type': 'application/x-www-form-urlencoded' });
+        if (!result) throw new Error("UnexpectedError");
 
-            var expiresIn = result.expires_in;
-            var tokenType = result.token_type;
-            var accessToken = result.access_token;
+        var expiresIn = result.expires_in;
+        var tokenType = result.token_type;
+        var accessToken = result.access_token;
 
-            var fetchUser = await User.fetchUser(tokenType, accessToken);
-            var fetchGuilds = await User.fetchGuilds(tokenType, accessToken);
+        var fetchUser = await User.fetchUser(tokenType, accessToken);
+        var fetchGuilds = await User.fetchGuilds(tokenType, accessToken);
 
-            var user = await User.insertOrUpdate(fetchUser.id, fetchUser.username, fetchUser.discriminator, `https://cdn.discordapp.com/avatars/${fetchUser.id}/${fetchUser.avatar}.webp`, fetchGuilds, new Date());
+        var user = await User.insertOrUpdate(fetchUser.id, fetchUser.username, fetchUser.email, fetchUser.discriminator, `https://cdn.discordapp.com/avatars/${fetchUser.id}/${fetchUser.avatar}.webp`, fetchGuilds, new Date());
 
-            var session = await Session.getByUserId(user.id);
-            if (!session) session = await Session.create(user.id, { tokenType, accessToken, expiresIn }, req.publicIp);
-            else {
-                session.tokenType = tokenType;
-                session.accessToken = accessToken;
-                session.expiresIn = expiresIn;
-                session.date = new Date();
-                if (!session.ips.includes(req.publicIp)) session.ips.push(req.publicIp);
-                await session.save();
-            }
-
-            var date = new Date(session.date.getTime() + expiresIn * 1000);
-            res.cookie("sessionID", session._id.toString(), { expires: date });
-            res.cookie("userID", session.discordId, { expires: date });
-            res.cookie("token", session.token, { expires: date });
-
-            return res.cookie("popup", JSON.stringify({ type: "success", content: "message:Logged" })).redirect(URL + "/account#account");
-        } catch (error) {
-            console.error(error?.response || error);
-            return resolve(_res);
+        var session = await Session.getByUserId(user.id);
+        if (!session) session = await Session.create(user.id, { tokenType, accessToken, expiresIn }, req.publicIp);
+        else {
+            session.tokenType = tokenType;
+            session.accessToken = accessToken;
+            session.expiresIn = expiresIn;
+            session.date = new Date();
+            if (!session.ips.includes(req.publicIp)) session.ips.push(req.publicIp);
+            await session.save();
         }
+
+        var date = new Date(session.date.getTime() + expiresIn * 1000);
+        res.cookie("sessionID", session._id.toString(), { expires: date });
+        res.cookie("userID", session.discordId, { expires: date });
+        res.cookie("token", session.token, { expires: date });
+
+        return res.cookie("popup", JSON.stringify({ type: "success", content: "message:Logged" })).redirect("/account#account");
     } catch (error) {
         res.cookie("popup", JSON.stringify({ type: "error", content: "message:" + error.message }));
-        res.status(400).redirect(URL + "/account#account");
+        res.status(400).redirect("/");
     }
 });

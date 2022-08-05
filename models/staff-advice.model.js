@@ -29,12 +29,11 @@ class StaffAdvice {
 
     /**
      * 
-     * @param {String} guild 
      * @param {String} staff 
      * @returns 
      */
-    static getByStaff(guild, staff) {
-        return StaffAdviceModel.find({ guildId: guild, staffId: staff });
+    static getByStaff(staff) {
+        return StaffAdviceModel.find({ staffId: staff });
     }
 
     /**
@@ -62,12 +61,11 @@ class StaffAdvice {
 
     /**
      * 
-     * @param {String} guild 
      * @param {String} member 
      * @returns 
      */
-    static getByMember(guild, member) {
-        return StaffAdviceModel.find({ guildId: guild, memberId: member });
+    static getByMember(member) {
+        return StaffAdviceModel.find({ memberId: member });
     }
 }
 

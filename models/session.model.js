@@ -1,5 +1,6 @@
 const { Schema, model, ObjectId } = require("mongoose");
 const token = require("random-web-token");
+const { discordFetch } = require("../utils/fetch");
 
 const { CLIENT_ID, CLIENT_SECRET } = process.env;
 
@@ -47,7 +48,7 @@ class Session {
      */
     static async disable(id) {
         var session = await SessionModel.findById(id, { accessToken: 1 });
-        await discordFetch("/oauth2/token/revoke", null, null, "post", `client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}&token=${session.accessToken}`, { 'Content-Type': 'application/x-www-form-urlencoded' });
+        await discordFetch("/oauth2/token/revoke", "post", null, null, `client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}&token=${session.accessToken}`, { 'Content-Type': 'application/x-www-form-urlencoded' });
         return SessionModel.updateOne({ _id: id }, { $unset: { tokenType: "", accessToken: "", token: "" }, $set: { active: false } });
     }
 

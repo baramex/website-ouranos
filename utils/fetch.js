@@ -14,8 +14,6 @@ function localFetch(endpoint, method, data) {
     });
 }
 
-
-
 var ratesLimit = [];
 /**
  * 

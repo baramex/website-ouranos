@@ -44,9 +44,9 @@ class User {
      * @param {Date} joinedAt 
      * @returns 
      */
-    static create(member, username, discriminator, avatarURL, guilds, joinedAt) {
+    static create(member, username, email, discriminator, avatarURL, guilds, joinedAt, grades) {
         return new Promise((res, rej) => {
-            var user = new UserModel({ id: member, username, discriminator, avatarURL, guilds, date: joinedAt });
+            var user = new UserModel({ id: member, username, email, discriminator, avatarURL, guilds, date: joinedAt, grades });
             user.save(err => {
                 if (err) rej(err);
                 else res(user);
@@ -64,19 +64,21 @@ class User {
      * @param {Date} joinedAt 
      * @returns 
      */
-    static async insertOrUpdate(discordId, username, discriminator, avatarURL, guilds, joinedAt) {
+    static async insertOrUpdate(discordId, username, email, discriminator, avatarURL, guilds, joinedAt, grades) {
         var user = await User.getByDiscordId(discordId);
         if (guilds) {
             guilds = User.parseGuilds(guilds);
             if (guilds.length == 0) throw new Error("NotInTheServer");
         }
 
-        if (!user) user = await User.create(member, username, discriminator, avatarURL, guilds, joinedAt);
+        if (!user) user = await User.create(member, username, email, discriminator, avatarURL, guilds, joinedAt, grades);
         else {
             user.username = username;
             user.discriminator = discriminator;
             user.avatarURL = avatarURL;
+            if (email) user.email = email;
             if (guilds) user.guilds = guilds;
+            if (grades) user.grades = grades;
             await user.save();
         }
 
@@ -117,8 +119,8 @@ class User {
         return UserModel.findOne({ id: user }, { challenges: 1 }).get("challenges");
     }
 
-    static update({ id, username, discriminator, avatar }, guilds) {
-        return User.insertOrUpdate(id, username, discriminator, `https://cdn.discordapp.com/avatars/${id}/${avatar}.webp`, guilds);
+    static update({ id, username, email, discriminator, avatar }, guilds, grades) {
+        return User.insertOrUpdate(id, username, email, discriminator, `https://cdn.discordapp.com/avatars/${id}/${avatar}.webp`, guilds, undefined, grades);
     }
 
     /**
@@ -141,11 +143,10 @@ class User {
 
     /**
      * 
-     * @param {String} guild 
      * @param {String} member 
      */
-    static fetchGrades(guild, member) {
-        return localFetch(`/guild/${guild}/member/${member}/grades`, "get");
+    static fetchGrades(member) {
+        return localFetch(`/member/${member}/grades`, "get");
     }
 
     /**
@@ -153,10 +154,10 @@ class User {
      * @param {String} accessToken
      * @param {String} guild 
      */
-    static async fetchAll(tokenType, accessToken, guild) {
+    static async fetchAll(tokenType, accessToken) {
         var user = await User.fetchUser(tokenType, accessToken);
         var guilds = await User.fetchGuilds(tokenType, accessToken);
-        var grades = await User.fetchGrades(guild, user.id);
+        var grades = await User.fetchGrades(user.id);
         return { user, guilds, grades };
     }
 
@@ -227,13 +228,16 @@ class User {
      * @param {String} user 
      * @returns 
      */
-    static async getInfractionsCount(guild, user) {
+    static async getInfractionsCount(user) {
         var b, w, k, m;
-        b = (await Ban.getByUser(guild, user)).length;
-        k = (await Kick.getByUser(guild, user)).length;
-        m = (await Mute.getByUser(guild, user)).length;
-        w = (await Warn.getByUser(guild, user)).length;
-        return { bans: b, kicks: k, mutes: m, warns: w };
+        b = await Ban.getByUser(user);
+        k = await Kick.getByUser(user);
+        m = await Mute.getByUser(user);
+        w = await Warn.getByUser(user);
+        return {
+            basic: { bans: b.filter(a => a.guildId == BASIC_GUILD_ID).length, kicks: k.filter(a => a.guildId == BASIC_GUILD_ID).length, mutes: m.filter(a => a.guildId == BASIC_GUILD_ID).length, warns: w.filter(a => a.guildId == BASIC_GUILD_ID).length },
+            challenge: { bans: b.filter(a => a.guildId == CHALLENGE_GUILD_ID).length, kicks: k.filter(a => a.guildId == CHALLENGE_GUILD_ID).length, mutes: m.filter(a => a.guildId == CHALLENGE_GUILD_ID).length, warns: w.filter(a => a.guildId == CHALLENGE_GUILD_ID).length }
+        };
     }
 }
 module.exports = { UserModel, User, userSchema };

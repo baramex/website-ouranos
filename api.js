@@ -3,11 +3,11 @@ const momenttz = require("moment-timezone");
 const express = require("express");
 const { Session } = require("./models/session.model");
 const { User } = require("./models/user.model");
-const { isValidObjectId } = require("mongoose");
-const { StaffAdvice } = require("./models/staff-advice.model");
 const { ObjectId } = require("mongodb");
 const { checkExpired } = require("./utils/methods");
 const router = express.Router();
+
+const { BASIC_GUILD_ID, CHALLENGE_GUILD_ID } = process.env;
 
 router.use("*", (req, res, next) => {
     if (!(req.headers.origin || req.headers.referer || "").replace("www.", "").startsWith(process.env.URL) || req.headers["sec-fetch-site"] != "same-origin") return res.sendStatus(403);
@@ -46,26 +46,12 @@ router.post("/disconnect", requiresAuthentification, async (req, res) => {
     }
 });
 
-router.get("/guild/:guild_id/user/:id/staff-advices/all", requiresAuthentification, async (req, res) => {
-    try {
-        var id = req.params.id;
-        if (id != "@me" && (!isValidObjectId(id) || !req.user._id.equals(id))) return res.status(403).send("Unauthorized");
-
-        var advices = await StaffAdvice.getByMember(req.params.guild_id, req.user._id);
-
-        res.status(200).json(advices);
-    } catch (error) {
-        console.error(error);
-        return res.status(400).send(error.message);
-    }
-});
-
-router.get("/guild/:guild_id/user/:id/infractions/count", requiresAuthentification, async (req, res) => {
+router.get("/user/:id/infractions/count", requiresAuthentification, async (req, res) => {
     try {
         var id = req.params.id;
         if (id != "@me") return res.status(403).send("Unauthorized");
 
-        var count = await User.getInfractionsCount(req.params.guild_id, req.user._id);
+        var count = await User.getInfractionsCount(req.user._id);
 
         res.status(200).json(count);
     } catch (error) {
@@ -99,9 +85,8 @@ router.get("/user/:id/:type", requiresAuthentification, async (req, res, next) =
                 req.user = await User.update(fetchUser);
             }
             else {
-                var f = await User.fetchAll();
-                // TODO: fetch grades
-                req.user = await User.update(f.user, f.guilds);
+                var f = await User.fetchAll(req.session.tokenType, req.session.accessToken);
+                req.user = await User.update(f.user, f.guilds, f.grades);
             }
         }
 
