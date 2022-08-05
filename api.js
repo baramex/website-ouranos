@@ -2,39 +2,15 @@ const momenttz = require("moment-timezone");
 
 const express = require("express");
 const { Session } = require("./models/session.model");
-const { User } = require("./models/user.model");
-const { ObjectId } = require("mongodb");
+const { User, UserModel } = require("./models/user.model");
 const { checkExpired } = require("./utils/methods");
+const { requiresAuthentification } = require("./utils/middleware");
 const router = express.Router();
-
-const { BASIC_GUILD_ID, CHALLENGE_GUILD_ID } = process.env;
 
 router.use("*", (req, res, next) => {
     if (!(req.headers.origin || req.headers.referer || "").replace("www.", "").startsWith(process.env.URL) || req.headers["sec-fetch-site"] != "same-origin") return res.sendStatus(403);
     next();
 });
-
-async function requiresAuthentification(req, res, next) {
-    try {
-        var sessionID = new ObjectId(req.cookies.sessionID);
-        var discordID = req.cookies.userID;
-        var token = req.cookies.token;
-        if (!sessionID || !discordID || !token) throw new Error();
-
-        var session = await Session.getSession(sessionID, discordID, token, req.publicIp);
-        if (!session) throw new Error();
-
-        var user = await User.getByDiscordId(session.discordId);
-        if (!user) throw new Error();
-
-        req.session = session;
-        req.user = user;
-        next();
-    } catch (error) {
-        console.error(error);
-        res.status(401).send("InvalidSession");
-    }
-}
 
 router.post("/disconnect", requiresAuthentification, async (req, res) => {
     try {
@@ -60,6 +36,20 @@ router.get("/user/:id/infractions/count", requiresAuthentification, async (req, 
     }
 });
 
+router.put("/user/@me/presentation", requiresAuthentification, async (req, res) => {
+    try {
+        if (req.user.grades.basic.length == 0 && req.user.grades.challenge.length == 0) return res.status(403).send("Unauthorized");
+
+        var presentation = req.body.presentation;
+        await UserModel.updateOne({ id: req.user.id }, { presentation }, { runValidators: true });
+
+        return res.status(200).send(presentation);
+    } catch (error) {
+        console.error(error);
+        return res.status(400).send(error.message);
+    }
+});
+
 router.get("/user/:id/:type", requiresAuthentification, async (req, res, next) => {
     try {
         var id = req.params.id;
@@ -70,7 +60,7 @@ router.get("/user/:id/:type", requiresAuthentification, async (req, res, next) =
         var exclude = ["_id", "guild", "lastDiscordUpdate"];
         if (req.path.includes("partial")) exclude.push("grades");
 
-        var projection = req.query.projection?.replace(/ /g, ",")?.split(",")?.splice(0, 10);
+        var projection = req.query.projection?.replace(/ /g, ",")?.split(",")?.splice(0, 15);
 
         var partial = null;
         if (projection.includes("grades") && !exclude.includes("grades") && (!checkExpired(req.user.lastDiscordUpdate, 1000 * 60 * 6) || (!req.user.grades && !checkExpired(req.user.lastDiscordUpdate, 1000 * 5)))) {

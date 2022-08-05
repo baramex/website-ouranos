@@ -30,12 +30,21 @@
 
     <section id="account" class="text-center text-dark">
         <h1 class="text-light text-center fs-0">Salut, <span class="name"></span></h1>
+
+        <div class="row px-5">
+            <select class="flex-shrink-1 fs-5 text-dark px-3 py-2 rounded-3 mt-5 bg-light" id="select-guild">
+                <option value="challenge">Serveur certif</option>
+                <option value="basic">Serveur ouvert</option>
+            </select>
+            <div class="mt-5" id="staff-comment" hidden></div>
+        </div>
         <div class="row">
             <div class="col-3 p-5 bg-light m-5 rounded-3">
                 <h2 class="mb-5">Profil utilisateur</h2>
                 <img class="avatar large box-shadow-inset rounded-circle" alt="avatar">
                 <p class="tag fs-3 mb-0 mt-3"></p>
                 <p class="email"></p>
+                <p class="coins fs-5 sans-serif"></p>
                 <div class="overflow-hidden bg-light-gray w-100 rounded-4 d-block position-relative"
                     style="line-height: 40px;">
                     <div class="bg-dark-gray level-val fs-5 rounded-s-4 h-100 position-absolute"
@@ -95,7 +104,8 @@
             </div>
             <div class="col-4 p-5 bg-light m-5 rounded-3">
                 <h2 class="mb-5">Recrutement</h2>
-                <p class="fs-5">Si vous vous sentez prêt à intégrer le staff d'ouranos, vous pouvez postuler sur le serveur de vôtre
+                <p class="fs-5">Si vous vous sentez prêt à intégrer le staff d'ouranos, vous pouvez postuler sur le
+                    serveur de vôtre
                     choix. Nous recherchons un staff dévoué au serveur, actif, et compétent en la matière, soit dans
                     l'aide, la modération ou encore l'animation. Pour n'importe quel poste, vous devez maîtriser
                     suffisament un/des domaines dans l'information, le développement et/ou la cybersécurité. Si vous

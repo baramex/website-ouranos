@@ -29,7 +29,7 @@ function discordFetch(endpoint, method, token_type, access_token, data = undefin
     return new Promise((res, rej) => {
         var curr = ratesLimit.find(a => a.endpoint == endpoint);
         if (curr && curr.remaing <= 1 && curr.reset >= new Date().getTime()) {
-            if (curr.reset - new Date().getTime() > 5000) return rej("TooManyRequests");
+            if (curr.reset - new Date().getTime() > 5000) return rej(new Error("TooManyRequests"));
             setTimeout(() => {
                 discordFetch(endpoint, method, token_type, access_token, data).then(res).catch(rej);
             }, curr.reset - new Date().getTime());
@@ -45,7 +45,7 @@ function discordFetch(endpoint, method, token_type, access_token, data = undefin
                 if (!ratesLimit.find(a => a.endpoint == endpoint)) ratesLimit.push({ endpoint });
                 var rl = ratesLimit.find(a => a.endpoint == endpoint);
                 rl.remaing = response.headers["x-ratelimit-remaining"];
-                rl.reset = ((response.headers["x-ratelimit-reset"] || 0) + 1) * 1000;
+                rl.reset = Number(response.headers["x-ratelimit-reset"] || 0) * 1000;
                 rl.time = new Date().getTime();
 
                 res(response.data);

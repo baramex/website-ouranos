@@ -41,10 +41,18 @@ window.addEventListener("load", async () => {
 
         navigate.hidden = false;
     }
+
+    let guildSelector = document.getElementById("select-guild");
+    guildSelector?.addEventListener("input", e => {
+        var value = e.target.value;
+        localStorage.setItem("guild", value);
+        updateFields("complete");
+    });
+
+    updateGuildSelect();
 });
 
-function userFetched(type) {
-    if (!__body) return setTimeout(() => userFetched(type), 10);
+function updateFields(type) {
     let user = sessionStorage.getItem("user");
     if (user) {
         const guild = localStorage.getItem("guild");
@@ -76,6 +84,11 @@ function userFetched(type) {
             if (emails.length > 0)
                 for (const i in emails) {
                     emails.item(i).innerText = user.email;
+                }
+            let coins = document.body.getElementsByClassName("coins");
+            if (coins.length > 0)
+                for (const i in coins) {
+                    coins.item(i).innerText = user.coins[guild] + " 💰";
                 }
             let lvlt = document.body.getElementsByClassName("level-txt");
             if (lvlt.length > 0)
@@ -122,19 +135,77 @@ function userFetched(type) {
                 }
             let certification = document.body.querySelector(".certification");
             if (certification) {
-                if (user.challenges?.length == 0) {
+                certification.innerHTML = "";
+                if (localStorage.getItem("guild") == "basic") {
                     let p = document.createElement("p");
-                    p.innerHTML = "Vous n'avez encore passé aucune certification, grâce à elle, vous pourez avoir accès au serveur <i>Ouranos Cerif</i>.";
+                    p.innerHTML = "Les certifications de sont pas disponible sur le serveur ouvert.";
                     certification.append(p);
                 }
-                let a = document.createElement("a");
-                a.href = "/certification";
-                a.classList.add("btn", "btn-success", "btn-lg", "mt-4");
-                a.innerText = "Nouvelle certification";
-                certification.append(a);
+                else {
+                    if (user.challenges?.length == 0) {
+                        let p = document.createElement("p");
+                        p.innerHTML = "Vous n'avez encore passé aucune certification, grâce à elle, vous pourez avoir accès au serveur <i>Ouranos Cerif</i>.";
+                        certification.append(p);
+                    }
+                    let a = document.createElement("a");
+                    a.href = "/certification";
+                    a.classList.add("btn", "btn-success", "btn-lg", "mt-4");
+                    a.innerText = "Nouvelle certification";
+                    certification.append(a);
+                }
+            }
+            let staffcomment = document.getElementById("staff-comment");
+            if (staffcomment && (user.grades.basic.length > 0 || user.grades.challenge.length > 0)) {
+                staffcomment.innerHTML = "";
+
+                let alert = document.createElement("div");
+                alert.classList.add("alert", "alert-success");
+                alert.role = "alert";
+                alert.innerText = "Modifications enregistrées !";
+                alert.hidden = true;
+
+                let div = document.createElement("div");
+                div.classList.add("form-floating");
+
+                let textarea = document.createElement("textarea");
+                textarea.id = "staff-comment-input";
+                textarea.style.height = "100px";
+                textarea.style.minHeight = "55px";
+                textarea.style.maxHeight = "250px";
+                textarea.maxLength = 256;
+                textarea.style.width = "100%";
+                textarea.classList.add("form-control", "flex-shrink-1", "bg-light");
+                textarea.placeholder = "Présenatation (staff)...";
+                textarea.value = user.presentation || "";
+
+                textarea.onchange = () => {
+                    if (textarea.value != user.presentation) {
+                        axios.put("/api/user/@me/presentation", { presentation: textarea.value }).then(() => {
+                            sessionStorage.setItem("user", JSON.stringify({ ...user, presentation: textarea.value }));
+                            alert.getAnimations().forEach(a => a.cancel());
+                            alert.hidden = false;
+                            alert.animate([{ opacity: 1 }, { opacity: 0 }], { delay: 1000, duration: 500 }).onfinish = () => alert.hidden = true;
+                        }, showCatchMessage);
+                    }
+                };
+
+                let label = document.createElement("label");
+                label.for = "staff-comment-input";
+                label.innerText = "Présentation (staff)";
+
+                div.append(textarea, label);
+                staffcomment.append(alert, div);
+
+                staffcomment.hidden = false;
             }
         }
     }
+}
+
+function userFetched(type) {
+    if (!__body) return setTimeout(() => userFetched(type), 10);
+
+    updateFields(type);
 
     // remove loader
     let preloader = document.getElementById("preloader");
@@ -221,10 +292,26 @@ async function getUser(type = "partial", projection = "username,avatarURL") {
     if (!user.hasOwnProperty("partial") || user.parial === true) user.partial = type == "partial";
 
     if (user.guilds) {
-        if (!localStorage.getItem("guild")) localStorage.setItem("guild", user.guilds.includes("challenge") ? "challenge" : "basic");
+        if (!localStorage.getItem("guild")) {
+            localStorage.setItem("guild", user.guilds.includes("challenge") ? "challenge" : "basic");
+            updateGuildSelect();
+        }
     }
 
     sessionStorage.setItem("user", JSON.stringify(user));
+}
+
+function updateGuildSelect() {
+    let el = document.getElementById("select-guild");
+    if (!el) return;
+    el.value = localStorage.getItem("guild");
+    var user = JSON.parse(sessionStorage.getItem("user") || "{}") || {};
+    if (!user.guilds) return;
+    if (!user.guilds.includes(localStorage.getItem("guild"))) {
+        localStorage.setItem("guild", user.guilds[0]);
+        el.value = user.guilds[0];
+    }
+    if (user.guilds.length == 1) el.querySelector("option[value=" + (user.guilds[0] == "basic" ? "challenge" : "basic") + "]").disabled = true;
 }
 
 async function getUserInfractionsCount() {

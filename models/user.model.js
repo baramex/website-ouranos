@@ -26,6 +26,7 @@ const userSchema = new Schema({
         }, default: { basic: [], challenge: [] }
     },
     challenges: { type: [Object], default: [] },
+    presentation: { type: String, maxLength: 256 },
 
     lastDiscordUpdate: { type: Date, default: 0 },
     date: { type: Date, default: new Date() }
@@ -240,4 +241,5 @@ class User {
         };
     }
 }
+
 module.exports = { UserModel, User, userSchema };

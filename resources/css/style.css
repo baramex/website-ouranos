@@ -20,7 +20,7 @@ button {
 *,
 ::after,
 ::before {
-    box-sizing: unset;
+    box-sizing: border-box;
     --bs-gutter-x: 0 !important;
     --bs-gutter-y: 0 !important;
 }
@@ -49,9 +49,10 @@ section#main {
 }
 
 header#main-header {
+    box-sizing: content-box;
     width: calc(100% - 40px);
     padding: 0 20px;
-    transition: 1s;
+    transition-duration: .5s;
     line-height: 80px;
     min-height: 80px;
     z-index: 6;
@@ -86,11 +87,6 @@ section#info {
 .fs-0 {
     font-size: 3rem;
 }
-
-/*section#info div.grid img {
-    width: 150px;
-    opacity: 0.7;
-}*/
 
 .card {
     transition: cubic-bezier(0.68, -0.55, 0.265, 1.55) .4s;
@@ -268,6 +264,10 @@ footer {
 #preloader h1 {
     margin-top: 80px;
     animation: text .5s ease-in-out infinite alternate;
+}
+
+select {
+    outline: none;
 }
 
 @keyframes text {

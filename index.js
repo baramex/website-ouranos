@@ -27,6 +27,7 @@ const cookieParser = require("cookie-parser");
 const { discordFetch } = require("./utils/fetch");
 const { User } = require("./models/user.model");
 const { Session } = require("./models/session.model");
+const { isAuthenticated } = require("./utils/middleware");
 
 // middleware
 server.use(baseLimiter);
@@ -39,7 +40,7 @@ server.use((req, res, next) => {
 });
 
 server.use("/api", rateLimit({
-    windowMs: 10 * 1000,
+    windowMs: 5 * 1000,
     max: 10,
     standardHeaders: true,
     legacyHeaders: false,
@@ -56,19 +57,25 @@ server.get("/", (req, res) => {
     return res.sendFile(path.join(__dirname, "pages", "index.html"));
 });
 
-server.get("/account", (req, res) => {
+server.get("/account", isAuthenticated, (req, res) => {
+    if (!req.isAuthenticated) return res.redirect("/discord-oauth");
     return res.sendFile(path.join(__dirname, "pages", "account.html"));
 });
 
-server.get("/discord-auth", rateLimit({
+server.get("/discord/basic", (req, res) => res.redirect("https://discord.gg/6rvTAf5XXy"));
+server.get("/discord/certif", (req, res) => res.redirect("https://discord.gg/YZaMVJp7dh"));
+
+server.get("/discord-oauth", rateLimit({
     windowMs: 1000 * 60 * 10,
     max: 8,
     standardHeaders: true,
     legacyHeaders: false
-}), async (req, res) => {
+}), isAuthenticated, async (req, res) => {
     try {
+        if (req.isAuthenticated) throw new Error("AlreadyAuthenticated");
+
         var code = req.query.code;
-        if (!code) throw new Error("InvalidRequest");
+        if (!code) return res.redirect(`https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=identify%20email%20guilds`);
 
         var result = await discordFetch("/oauth2/token", "post", null, null, `client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}&grant_type=authorization_code&code=${code}&redirect_uri=${REDIRECT_URI}`, { 'Content-Type': 'application/x-www-form-urlencoded' });
         if (!result) throw new Error("UnexpectedError");
