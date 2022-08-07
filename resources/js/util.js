@@ -1,4 +1,12 @@
 fetch("/static/header.html").then(res => res.text()).then(txt => document.getElementById("header").innerHTML = txt);
+fetch("/static/footer.html").then(res => res.text()).then(txt => {
+    var footer = document.getElementById("footer");
+    if (footer) footer.innerHTML = txt;
+    else
+        window.addEventListener("load", () => {
+            document.getElementById("footer").innerHTML = txt;
+        });
+});
 
 let __body;
 let barHeader;
@@ -111,7 +119,7 @@ function updateFields(type) {
             if (from.length > 0)
                 for (const i in from) {
                     let date = new Date(user.date);
-                    from.item(i).innerText = `le ${String(date.getDate()).padStart(2, "0")}/${String(date.getDay()).padStart(2, "0")}/${date.getFullYear()}`;
+                    from.item(i).innerText = `le ${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth()+1).padStart(2, "0")}/${date.getFullYear()}`;
                 }
             let warns = document.body.getElementsByClassName("warns");
             if (warns.length > 0)

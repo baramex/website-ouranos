@@ -57,16 +57,16 @@ router.get("/user/:id/:type", requiresAuthentification, async (req, res, next) =
         if (id != "@me") return res.status(403).send("Unauthorized");
         if (!["partial", "complete"].includes(type)) return next();
 
-        var exclude = ["_id", "guild", "lastDiscordUpdate"];
-        if (req.path.includes("partial")) exclude.push("grades");
+        var exclude = ["_id", "lastDiscordUpdate"];
+        if (req.path.includes("partial")) exclude.push("grades", "guilds");
 
         var projection = req.query.projection?.replace(/ /g, ",")?.split(",")?.splice(0, 15);
 
         var partial = null;
-        if (projection.includes("grades") && !exclude.includes("grades") && (!checkExpired(req.user.lastDiscordUpdate, 1000 * 60 * 6) || (!req.user.grades && !checkExpired(req.user.lastDiscordUpdate, 1000 * 5)))) {
+        if (((projection.includes("grades") && !exclude.includes("grades")) || (projection.includes("guilds") && !exclude.includes("guilds"))) && checkExpired(req.user.lastDiscordUpdate, 1000 * 60 * 5)) {
             partial = false;
         }
-        else if (!checkExpired(req.user.lastDiscordUpdate, 1000 * 60 * 6) || (!req.user.guild && !checkExpired(req.user.lastDiscordUpdate, 1000 * 5))) {
+        else if (checkExpired(req.user.lastDiscordUpdate, 1000 * 60 * 5)) {
             partial = true;
         }
         if (partial !== null) {

@@ -29,7 +29,7 @@ const userSchema = new Schema({
     presentation: { type: String, maxLength: 256 },
 
     lastDiscordUpdate: { type: Date, default: 0 },
-    date: { type: Date, default: new Date() }
+    date: { type: Date, default: Date.now }
 });
 
 const UserModel = model('User', userSchema, "users");
@@ -47,7 +47,7 @@ class User {
      */
     static create(member, username, email, discriminator, avatarURL, guilds, joinedAt, grades) {
         return new Promise((res, rej) => {
-            var user = new UserModel({ id: member, username, email, discriminator, avatarURL, guilds, date: joinedAt, grades });
+            var user = new UserModel({ id: member, username, email, discriminator, avatarURL, guilds, date: joinedAt, grades, lastDiscordUpdate: new Date() });
             user.save(err => {
                 if (err) rej(err);
                 else res(user);
@@ -72,11 +72,12 @@ class User {
             if (guilds.length == 0) throw new Error("NotInTheServer");
         }
 
-        if (!user) user = await User.create(member, username, email, discriminator, avatarURL, guilds, joinedAt, grades);
+        if (!user) user = await User.create(discordId, username, email, discriminator, avatarURL, guilds, joinedAt, grades);
         else {
             user.username = username;
             user.discriminator = discriminator;
             user.avatarURL = avatarURL;
+            user.lastDiscordUpdate = new Date();
             if (email) user.email = email;
             if (guilds) user.guilds = guilds;
             if (grades) user.grades = grades;
@@ -109,7 +110,7 @@ class User {
      * @param {String} discordId
      */
     static getByDiscordId(discordId) {
-        return UserModel.findOne({ discordId });
+        return UserModel.findOne({ id: discordId });
     }
 
 

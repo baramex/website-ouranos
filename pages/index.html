@@ -11,7 +11,7 @@
     <link rel="icon" href="/images/logo.png">
     <meta http-equiv="Content-Security-Policy"
         content="default-src 'self'; connect-src 'self'; script-src 'self' cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' cdn.jsdelivr.net; img-src *">
-    <title>Ouranos - informatique | accueil</title>
+    <title>Ourannos - informatique | accueil</title>
 </head>
 
 <body>
@@ -30,25 +30,25 @@
     <script src="/js/util.js"></script>
     <script src="/js/main.js"></script>
 
-    <section id="info">
-        <h1 class="text-light text-center fs-1">Nos atouts</h1>
+    <section id="info" class="pt-3">
+        <h1 class="text-light text-center fs-1 mb-4">Nos atouts</h1>
         <div class="row justify-content-evenly">
-            <div class="col-4 p-5 bg-light rounded-4 card shadow-lg m-5">
+            <div class="col-4 p-5 bg-light rounded-4 card shadow-lg m-5 text-center">
+                <img class="mx-auto mb-3" width="100" src="/images/flag.png">
                 <h2 class="fs-2 text-gray mt-2 sans-serif">Serveur pour les
                     confirmés</h2>
                 <p class="sans-serif text-smooth-gray fs-5-5 m-0">Pour éviter tous les skids ou script kiddie, qui sont
                     là juste pour faire des demandes déplacées, ou alors pour parler uniquement à ceux du domaine, il y
                     a un second serveur Ouranos Cerif où
                     chaque
-                    nouveau membre est soumis à faire au moins un test interaction sur une liste de sujets
-                    différents (certification).
-                    La réussite de ce dernier lui permerttra d'accéder au serveur et de récupérer un rôle. Pour
-                    obtenir
-                    d'autres rôles, rien de l'empêche de faire d'autres tests par la suite.<br><br>
+                    nouveau membre est soumis à faire au moins une <a href="/certification">certification</a> (test
+                    interactif). Il est possible de
+                    faire plusieurs certifications pour obtenir plusieurs rôles.<br><br>
                     <a target="_blank" href="/discord/certif">rejoindre le serveur discord</a>
                 </p>
             </div>
-            <div class="col-4 p-5 bg-light rounded-4 card shadow-lg m-5">
+            <div class="col-4 p-5 bg-light rounded-4 card shadow-lg m-5 text-center">
+                <img class="mx-auto mb-3" width="100" src="/images/skills.png">
                 <h2 class="fs-2 text-gray mt-2 sans-serif">Diversité</h2>
                 <p class="sans-serif text-smooth-gray fs-5-5 m-0">Nous avons déjà une communauté active qui nous suit,
                     chaque personne a son domaine préféré et
@@ -59,7 +59,8 @@
                     ce-dernier. Grâce à l'accessibilité restreinte des rôles, on peut admettre la diversité des
                     domaines.</p>
             </div>
-            <div class="col-4 p-5 bg-light rounded-4 card shadow-lg m-5">
+            <div class="col-4 p-5 bg-light rounded-4 card shadow-lg m-5 text-center">
+                <img class="mx-auto mb-3" width="100" src="/images/learn.png">
                 <h2 class="fs-2 text-gray mt-2 sans-serif">Serveur ouvert</h2>
                 <p class="sans-serif text-smooth-gray fs-5-5 m-0">
                     Pour les nouveaux dans le domaine et les personnes qui n'ont pas envie de passer une certification,
@@ -76,6 +77,7 @@
             <path fill="#212020" fill-opacity="1"
                 d="M0,160L288,288L576,192L864,192L1152,128L1440,288L1440,0L1152,0L864,0L576,0L288,0L0,0Z"></path>
         </svg>
+
         <h1 class="text-dark text-center fs-1">À propos de nous</h1>
         <p class="my-5 mx-auto text-center description">Nous sommes avant tout un serveur discord, notre activité a
             commencé en été 2020. Depuis là, nous avons
@@ -83,13 +85,15 @@
             suppression
             d’un de nos serveurs par discord, mais depuis plus de problème. Notre staff s’est créé petit à petit et
         </p>
+
+        <svg class="mt-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 160 1440 160">
+            <path fill="#212120" fill-opacity="1"
+                d="M0,160L288,256L576,160L864,224L1152,160L1440,256L1440,320L1152,320L864,320L576,320L288,320L0,320Z">
+            </path>
+        </svg>
     </section>
 
-    <footer>
-        <p
-            style="font-family: hammer;font-size: 20px;position: absolute;left: 50%;transform: translateX(-50%);margin-top: 0;">
-            - Ouranos -</p>
-    </footer>
+    <footer id="footer"></footer>
 </body>
 
 </html>

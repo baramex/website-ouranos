@@ -50,7 +50,7 @@ server.listen(PORT, () => {
     console.log("Server started in port " + PORT);
 });
 
-const { CLIENT_ID, CLIENT_SECRET, URL, REDIRECT_URI } = process.env;
+const { CLIENT_ID, CLIENT_SECRET, REDIRECT_URI } = process.env;
 
 // routes
 server.get("/", (req, res) => {
@@ -72,7 +72,7 @@ server.get("/discord-oauth", rateLimit({
     legacyHeaders: false
 }), isAuthenticated, async (req, res) => {
     try {
-        if (req.isAuthenticated) throw new Error("AlreadyAuthenticated");
+        if (req.isAuthenticated) return res.redirect("/account");
 
         var code = req.query.code;
         if (!code) return res.redirect(`https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=identify%20email%20guilds`);
@@ -110,4 +110,9 @@ server.get("/discord-oauth", rateLimit({
         res.cookie("popup", JSON.stringify({ type: "error", content: "message:" + error.message }));
         res.status(400).redirect("/");
     }
+});
+
+server.get("/certification", isAuthenticated, (req, res) => {
+    if (req.isAuthenticated) return res.sendFile(path.join(__dirname, "pages", "certification.html"));
+    else res.redirect("/discord-oauth");
 });
